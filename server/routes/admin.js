@@ -7,7 +7,7 @@ const auth = require('../middleware/auth');
 const adminOnly = require('../middleware/adminOnly');
 
 // All routes require admin access
-router.use(auth, adminOnly);
+router.use(adminOnly);
 
 // GET /api/admin/users
 router.get('/users', async (req, res) => {

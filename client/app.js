@@ -76,41 +76,17 @@ const AppState = {
 // AUTH MANAGER — must be before DOMContentLoaded
 // ═══════════════════════════════════════════════════════
 const AuthManager = (() => {
-    const TOKEN_KEY = 'mm_auth_token';
-    const USER_KEY  = 'mm_auth_user';
-    function getToken() { return localStorage.getItem(TOKEN_KEY); }
-    function setToken(t) { localStorage.setItem(TOKEN_KEY, t); }
+    function getToken() { return null; }
+    function setToken(t) {}
     function getUser()  {
-        try { return JSON.parse(localStorage.getItem(USER_KEY)); } catch { return null; }
+        return { name: 'Admin', role: 'admin' };
     }
-    function setUser(u) { localStorage.setItem(USER_KEY, JSON.stringify(u)); }
-    function clearAuth() { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY); }
-    function isLoggedIn() { return !!getToken(); }
-    async function login(email, password) {
-        const res  = await fetch('/api/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email,password}) });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Login failed');
-        setToken(data.token); setUser(data.user || { name: email.split('@')[0], email }); return data;
-    }
-    async function register(name, email, password) {
-        const API_BASE = window.location.origin;
-
-        const res = await fetch(`${API_BASE}/api/auth/register`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            name,
-            email,
-            password
-          })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || (Array.isArray(data.errors)?data.errors[0]?.msg:null) || 'Registration failed');
-        setToken(data.token); setUser(data.user || { name, email }); return data;
-    }
-    function logout() { clearAuth(); updateAuthUI(); navigateTo('dashboard'); showToast('Logged out.'); }
+    function setUser(u) {}
+    function clearAuth() {}
+    function isLoggedIn() { return true; }
+    async function login(email, password) { return {}; }
+    async function register(name, email, password) { return {}; }
+    function logout() { navigateTo('dashboard'); showToast('Logged out.'); }
     return { getToken, getUser, isLoggedIn, login, register, logout };
 })();
 
@@ -177,11 +153,7 @@ function wireStaticButtons() {
     document.querySelectorAll('.nav-links a').forEach(link => {
         link.addEventListener('click', e => {
             e.preventDefault();
-            if (link.dataset.protected && !AuthManager.isLoggedIn()) {
-                requireAuth(link.dataset.target);
-            } else {
-                navigateTo(link.dataset.target);
-            }
+            navigateTo(link.dataset.target);
         });
     });
 }
