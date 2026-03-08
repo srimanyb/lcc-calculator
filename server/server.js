@@ -59,7 +59,7 @@ app.use((err, req, res, next) => {
 // ─── Start ────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`🚀 MenuMaster server running → http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
 
 module.exports = app;
