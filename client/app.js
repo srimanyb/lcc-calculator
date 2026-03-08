@@ -93,7 +93,19 @@ const AuthManager = (() => {
         setToken(data.token); setUser(data.user || { name: email.split('@')[0], email }); return data;
     }
     async function register(name, email, password) {
-        const res  = await fetch('/api/auth/register', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name,email,password}) });
+        const API_BASE = window.location.origin;
+
+        const res = await fetch(`${API_BASE}/api/auth/register`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            password
+          })
+        });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || (Array.isArray(data.errors)?data.errors[0]?.msg:null) || 'Registration failed');
         setToken(data.token); setUser(data.user || { name, email }); return data;
