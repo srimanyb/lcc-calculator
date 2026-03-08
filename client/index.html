@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LCC Calculator</title>
+    <meta name="description" content="A professional catering calculator for managing recipes and combining ingredients for events.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles-extra.css">
+</head>
+<body>
+
+<!-- Auth Modal (hidden by default, shown when accessing a protected feature) -->
+<div class="modal-overlay auth-gate hidden" id="authModal">
+    <div class="modal-card" style="position:relative;">
+        <button class="icon-btn close-auth-btn" id="closeAuthModal" title="Cancel">
+            <i class="fa-solid fa-times"></i>
+        </button>
+        <div class="modal-logo">
+            <img src="images/logo.png" alt="Laxmi Chandra Catering Logo"
+                 style="width:64px;height:64px;object-fit:contain;border-radius:8px;margin-bottom:.5rem;"
+                 onerror="this.style.display='none'">
+            <h1>Laxmi Chandra Catering</h1>
+            <p id="authModalHint">Log in to access this feature.</p>
+        </div>
+        <div class="auth-tabs">
+            <button class="auth-tab active" data-auth-tab="login">Log In</button>
+            <button class="auth-tab" data-auth-tab="register">Create Account</button>
+        </div>
+        <form id="loginForm" class="auth-form active-form">
+            <div class="form-group">
+                <label for="loginEmail">Email</label>
+                <input type="email" id="loginEmail" class="form-control" placeholder="you@example.com" required autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+            </div>
+            <p class="error-msg" id="loginError"></p>
+            <button type="submit" class="btn primary w-full" id="loginSubmitBtn">Log In</button>
+        </form>
+        <form id="registerForm" class="auth-form">
+            <div class="form-group">
+                <label for="regName">Full Name</label>
+                <input type="text" id="regName" class="form-control" placeholder="Ravi Kumar" required autocomplete="name">
+            </div>
+            <div class="form-group">
+                <label for="regEmail">Email</label>
+                <input type="email" id="regEmail" class="form-control" placeholder="you@example.com" required autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label for="regPassword">Password <span class="text-muted">(min 6 chars)</span></label>
+                <input type="password" id="regPassword" class="form-control" placeholder="••••••••" required minlength="6" autocomplete="new-password">
+            </div>
+            <p class="error-msg" id="registerError"></p>
+            <button type="submit" class="btn primary w-full" id="registerSubmitBtn">Create Account</button>
+        </form>
+    </div>
+</div>
+
+<div class="app-container">
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <img src="images/logo.png" alt="LCC Logo"
+                     style="width:36px;height:36px;object-fit:contain;border-radius:6px;flex-shrink:0;"
+                     onerror="this.outerHTML='<i class=\'fa-solid fa-utensils logo-icon\'></i>'">
+                <h2>Laxmi Chandra Catering</h2>
+            </div>
+            <button class="icon-btn close-sidebar-btn" id="closeSidebarBtn">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+        
+        <ul class="nav-links">
+            <li><a href="#" data-target="dashboard" class="active">
+                <i class="fa-solid fa-house nav-icon"></i><span>Dashboard</span>
+            </a></li>
+            <li><a href="#" data-target="manage-recipes" data-protected="true">
+                <i class="fa-solid fa-book nav-icon"></i><span>Manage Recipes</span>
+                <i class="fa-solid fa-lock nav-lock" id="lockManageRecipes"></i>
+            </a></li>
+            <li><a href="#" data-target="search-recipe">
+                <i class="fa-solid fa-magnifying-glass nav-icon"></i><span>Search Recipe</span>
+            </a></li>
+            <li><a href="#" data-target="menu-calculator">
+                <i class="fa-solid fa-calculator nav-icon"></i><span>Menu Calculator</span>
+            </a></li>
+            <li><a href="#" data-target="combined-report">
+                <i class="fa-solid fa-file-invoice nav-icon"></i><span>Combined Report</span>
+            </a></li>
+            <li><a href="#" data-target="saved-events">
+                <i class="fa-solid fa-calendar-check nav-icon"></i><span>Saved Events</span>
+            </a></li>
+            <!-- Admin only: hidden until JS detects admin role -->
+            <li class="admin-nav-item" id="adminNavItem">
+                <a href="#" data-target="admin-login-activity">
+                    <i class="fa-solid fa-shield-halved nav-icon"></i><span>Login Activity</span>
+                    <span class="admin-badge">Admin</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- Sidebar auth block: login button (guest) or user info (logged-in) -->
+        <div class="sidebar-user" id="sidebarUserBlock">
+            <!-- Guest state -->
+            <div id="sidebarGuest" style="width:100%;">
+                <button class="btn outline w-full" id="openLoginBtn" style="font-size:.8rem;">
+                    <i class="fa-solid fa-right-to-bracket"></i> Log In
+                </button>
+            </div>
+            <!-- Logged-in state (hidden until auth) -->
+            <div id="sidebarLoggedIn" style="display:none;width:100%;display:none;">
+                <div style="display:flex;align-items:center;gap:.6rem;">
+                    <div class="user-avatar" id="userAvatar">?</div>
+                    <div class="user-info" style="flex:1;min-width:0;">
+                        <p class="user-name" id="userName">User</p>
+                    </div>
+                    <button class="icon-btn" id="logoutBtn" title="Log out">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <main class="main-content">
+        <header class="top-header">
+            <div class="header-left">
+                <button class="icon-btn menu-btn" id="menuBtn"><i class="fa-solid fa-bars"></i></button>
+                <h1 id="pageTitle" class="page-title">Dashboard</h1>
+            </div>
+            <div class="header-actions">
+                <button class="action-btn outline" id="themeToggle" aria-label="Toggle Theme">
+                    <i class="fa-regular fa-moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <div class="scroll-container">
+
+            <!-- VIEW: Dashboard -->
+            <section id="dashboard" class="view active-view">
+                <div class="view-header">
+                    <h2>Welcome Back</h2>
+                    <p class="text-muted">Here's an overview of your recipes and activity.</p>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="stat-card nav-card" data-target="manage-recipes">
+                        <div class="stat-icon bg-blue-light"><i class="fa-solid fa-book text-blue"></i></div>
+                        <div class="stat-content">
+                            <h3>Total Recipes</h3>
+                            <p id="dashRecipeCount" class="stat-number">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-green-light"><i class="fa-solid fa-chart-line text-green"></i></div>
+                        <div class="stat-content">
+                            <h3>Popular Recipe</h3>
+                            <p id="dashPopularRecipe" class="stat-desc">—</p>
+                        </div>
+                    </div>
+                    <div class="stat-card nav-card" data-target="menu-calculator">
+                        <div class="stat-icon" style="background:var(--bg-app)"><i class="fa-solid fa-calculator" style="color:var(--primary-color)"></i></div>
+                        <div class="stat-content">
+                            <h3>Menu Calculator</h3>
+                            <p class="stat-desc">Plan your next event</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card recent-section">
+                    <div class="card-header"><h3>Recently Added Recipes</h3></div>
+                    <div class="card-body">
+                        <div id="recentRecipesList" class="empty-state">
+                            <i class="fa-solid fa-folder-open empty-icon"></i>
+                            <p>No recipes added yet.</p>
+                            <button class="btn primary nav-card-btn" data-target="manage-recipes">Add Your First Recipe</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: Manage Recipes -->
+            <section id="manage-recipes" class="view">
+                <div class="view-header">
+                    <h2>Manage Recipes</h2>
+                    <p class="text-muted">Add, edit, or remove your catering recipes.</p>
+                </div>
+                <div class="split-layout">
+                    <div class="card recipe-form-card">
+                        <div class="card-header"><h3 id="recipeFormTitle">Add New Recipe</h3></div>
+                        <div class="card-body">
+                            <form id="recipeForm">
+                                <input type="hidden" id="recipeId">
+                                <div class="form-group">
+                                    <label for="recipeName">Dish Name *</label>
+                                    <input type="text" id="recipeName" class="form-control" required placeholder="e.g., Butter Chicken">
+                                </div>
+                                <div class="form-group">
+                                    <label for="recipeBaseServing">Base Serving Size (People) *</label>
+                                    <input type="number" id="recipeBaseServing" class="form-control" required min="1" placeholder="e.g., 10">
+                                </div>
+                                <div class="form-group">
+                                    <label for="recipeTags">Tags <span class="text-muted">(comma separated)</span></label>
+                                    <input type="text" id="recipeTags" class="form-control" placeholder="chicken, mughlai">
+                                </div>
+                                <div class="ingredients-section">
+                                    <div class="section-header">
+                                        <h4>Ingredients</h4>
+                                    </div>
+                                    <div id="ingredientsList" class="ingredients-list"></div>
+                                </div>
+                                <div class="form-actions mt-4" style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+                                    <button type="button" class="btn outline" id="addIngredientBtn">
+                                        <i class="fa-solid fa-plus"></i> Add Row
+                                    </button>
+                                    <button type="button" class="btn outline" id="cancelEditBtn" style="display:none;">Cancel</button>
+                                    <button type="submit" class="btn primary" style="flex:1; min-width:140px;" id="saveRecipeBtn">Save Recipe</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card saved-recipes-card">
+                        <div class="card-header"><h3>Saved Recipes</h3></div>
+                        <div class="card-body">
+                            <div class="search-box mb-3">
+                                <i class="fa-solid fa-search search-icon"></i>
+                                <input type="text" id="filterRecipes" class="form-control" placeholder="Search saved recipes...">
+                            </div>
+                            <div id="savedRecipesList" class="saved-recipes-list">
+                                <div class="empty-state"><p>No recipes added yet.</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: Search Recipe -->
+            <section id="search-recipe" class="view">
+                <div class="view-header">
+                    <h2>Search & Scale Recipe</h2>
+                    <p class="text-muted">Find a recipe and calculate ingredients for a specific number of people.</p>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <form id="searchRecipeForm" class="search-scale-form">
+                            <div class="form-row">
+                                <div class="form-group flex-1">
+                                    <label for="searchQuery">Search Recipes</label>
+                                    <input type="text" id="searchQuery" class="form-control" placeholder="e.g., Butter Chicken, paneer..." required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="searchTargetServing">Target Serving Size</label>
+                                    <input type="number" id="searchTargetServing" class="form-control" min="1" placeholder="e.g., 50">
+                                </div>
+                                <div class="form-group align-bottom">
+                                    <button type="submit" class="btn primary w-full">Search</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div id="searchResults" style="display:none;">
+                    <div id="searchResultsList"></div>
+                </div>
+            </section>
+
+            <!-- VIEW: Menu Calculator -->
+            <section id="menu-calculator" class="view">
+                <div class="view-header">
+                    <h2>Menu Calculator</h2>
+                    <p class="text-muted">Combine multiple recipes and calculate aggregate ingredient totals.</p>
+                </div>
+                <div class="split-layout">
+                    <div class="card">
+                        <div class="card-header"><h3>Add to Menu</h3></div>
+                        <div class="card-body">
+                            <form id="addMenuForm">
+                                <input type="hidden" id="menuRecipeId">
+                                <div class="form-group">
+                                    <label for="menuRecipeSearch">Search Recipe</label>
+                                    <div class="autocomplete-wrapper" id="menuRecipeAutocomplete">
+                                        <div class="autocomplete-input-wrap">
+                                            <i class="fa-solid fa-magnifying-glass autocomplete-icon"></i>
+                                            <input type="text" id="menuRecipeSearch" class="form-control autocomplete-input" placeholder="Type to search recipes..." autocomplete="off">
+                                        </div>
+                                        <ul class="autocomplete-dropdown" id="menuRecipeDropdown" role="listbox"></ul>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="menuTargetServing">Number of People for this Dish</label>
+                                    <input type="number" id="menuTargetServing" class="form-control" required min="1" placeholder="e.g., 50">
+                                </div>
+                                <button type="submit" class="btn outline w-full">
+                                    <i class="fa-solid fa-plus"></i> Add to Menu
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card bg-surface-alt">
+                        <div class="card-header flex-between">
+                            <h3>Current Menu Items</h3>
+                            <span class="badge" id="menuItemCount">0 Items</span>
+                        </div>
+                        <div class="card-body">
+                            <div id="currentMenuList" class="selected-menu-list">
+                                <div class="empty-state py-2"><p>No dishes added yet.</p></div>
+                            </div>
+                            <div class="form-actions mt-4" id="generateReportActions" style="display:none;">
+                                <button type="button" class="btn primary w-full" id="generateReportBtn">Generate Combined Report</button>
+                                <button type="button" class="btn danger w-full" id="clearMenuBtn">Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: Combined Report -->
+            <section id="combined-report" class="view">
+                <div class="view-header flex-between">
+                    <div>
+                        <h2>Combined Ingredients Report</h2>
+                        <p class="text-muted">Review, export, or share your generated ingredient lists.</p>
+                    </div>
+                    <div class="header-actions-group">
+                        <button class="btn outline" id="shareReportBtn" style="display:none;"><i class="fa-solid fa-share-nodes"></i> Share</button>
+                        <button class="btn primary" id="exportPdfBtn" style="display:none;"><i class="fa-solid fa-file-pdf"></i> Export PDF</button>
+                    </div>
+                </div>
+
+                <!-- Save Event Panel — shown after a report is generated -->
+                <div id="saveEventPanel" style="display:none;" class="card mb-4">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-calendar-plus" style="color:var(--primary-color);margin-right:.5rem;"></i>Save as Event</h3>
+                        <p class="text-muted text-sm">Give this report an event name to track it in your history.</p>
+                    </div>
+                    <div class="card-body">
+                        <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end;">
+                            <div class="form-group" style="flex:2;min-width:200px;margin-bottom:0;">
+                                <label for="eventNameInput">Event Name *</label>
+                                <input type="text" id="eventNameInput" class="form-control"
+                                    placeholder="e.g., Wedding Reception – March 2026">
+                            </div>
+                            <div class="form-group" style="flex:1;min-width:140px;margin-bottom:0;">
+                                <label for="eventDateInput">Event Date *</label>
+                                <input type="date" id="eventDateInput" class="form-control" required>
+                            </div>
+                            <div class="form-group" style="flex:1;min-width:140px;margin-bottom:0;">
+                                <label for="eventPeopleInput">People Count *</label>
+                                <input type="number" id="eventPeopleInput" class="form-control"
+                                    min="1" placeholder="e.g., 50" required>
+                            </div>
+                            <button class="btn primary" id="saveEventBtn" style="height:42px;white-space:nowrap;">
+                                <i class="fa-solid fa-floppy-disk"></i> Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="reportContainer">
+                    <div class="empty-state card">
+                        <i class="fa-solid fa-file-invoice empty-icon"></i>
+                        <p>No report generated yet. Add items in the Menu Calculator first.</p>
+                        <button class="btn primary nav-card-btn" data-target="menu-calculator">Go to Calculator</button>
+                    </div>
+                </div>
+                <template id="reportTemplate">
+                    <div class="report-content">
+                        <div class="card mb-3">
+                            <div class="card-header"><h3>Menu Summary</h3></div>
+                            <div class="card-body">
+                                <ul id="reportMenuSummary" class="menu-summary-list"></ul>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Consolidated Shopping List</h3>
+                                <p class="text-sm text-muted">Ingredients with matching names and units are combined.</p>
+                            </div>
+                            <div class="card-body">
+                                <table class="data-table" id="reportTableForPdf">
+                                    <thead><tr><th>Ingredient</th><th>Total Quantity</th><th>Unit</th></tr></thead>
+                                    <tbody id="reportIngredientsList"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </section>
+
+
+            <!-- VIEW: Saved Events -->
+            <section id="saved-events" class="view">
+                <div class="view-header flex-between">
+                    <div>
+                        <h2>Saved Events</h2>
+                        <p class="text-muted">History of catering reports saved from the Combined Report view.</p>
+                    </div>
+                    <button class="btn danger outline" id="clearAllEventsBtn" style="display:none;">
+                        <i class="fa-solid fa-trash"></i> Clear All
+                    </button>
+                </div>
+                <div id="savedEventsList">
+                    <div class="empty-state card">
+                        <i class="fa-solid fa-calendar-xmark empty-icon"></i>
+                        <p>No events saved yet. Generate a Combined Report and click <strong>Save as Event</strong>.</p>
+                        <button class="btn primary nav-card-btn" data-target="menu-calculator">Go to Calculator</button>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- VIEW: Admin — User Login Activity -->
+            <section id="admin-login-activity" class="view">
+                <div class="view-header flex-between">
+                    <div>
+                        <h2><i class="fa-solid fa-shield-halved" style="color:var(--primary-color);margin-right:.5rem;"></i>User Login Activity</h2>
+                        <p class="text-muted">All login and registration events, newest first. Admin access only.</p>
+                    </div>
+                    <button class="btn outline" id="refreshLoginActivityBtn">
+                        <i class="fa-solid fa-rotate-right"></i> Refresh
+                    </button>
+                </div>
+
+                <!-- Stats bar -->
+                <div class="dashboard-grid" id="loginActivityStats" style="margin-bottom:1.25rem;">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-blue-light"><i class="fa-solid fa-right-to-bracket text-blue"></i></div>
+                        <div class="stat-content">
+                            <h3>Logins Today</h3>
+                            <p id="statTodayLogins" class="stat-number">—</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-green-light"><i class="fa-solid fa-user-plus text-green"></i></div>
+                        <div class="stat-content">
+                            <h3>Registrations Today</h3>
+                            <p id="statTodayRegistrations" class="stat-number">—</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:var(--bg-app);"><i class="fa-solid fa-database" style="color:var(--primary-color)"></i></div>
+                        <div class="stat-content">
+                            <h3>Total Events</h3>
+                            <p id="statTotalEvents" class="stat-number">—</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Events table -->
+                <div class="card">
+                    <div class="card-header flex-between">
+                        <h3>Event Log</h3>
+                        <span class="badge" id="loginActivityPageInfo">Page 1</span>
+                    </div>
+                    <div class="card-body" style="overflow-x:auto;">
+                        <div id="loginActivityTableWrap">
+                            <div class="empty-state">
+                                <i class="fa-solid fa-spinner fa-spin empty-icon"></i>
+                                <p>Loading activity…</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Pagination -->
+                    <div class="card-footer" id="loginActivityPagination" style="display:none;padding:.75rem 1rem;display:none;">
+                        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
+                            <button class="btn outline small" id="loginActivityPrevBtn" disabled>
+                                <i class="fa-solid fa-chevron-left"></i> Prev
+                            </button>
+                            <span id="loginActivityPageLabel" class="text-muted text-sm">Page 1 of 1</span>
+                            <button class="btn outline small" id="loginActivityNextBtn" disabled>
+                                Next <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div><!-- /.scroll-container -->
+    </main>
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+<script src="app.js"></script>
+</body>
+</html>

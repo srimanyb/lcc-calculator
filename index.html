@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Calculator</title>
+
+    <!-- SEO and Meta tags -->
+    <meta name="description"
+        content="A professional catering calculator for managing recipes and combining ingredients for events.">
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- jsPDF for exporting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fa-solid fa-utensils logo-icon"></i>
+                    <h2>MenuMaster</h2>
+                </div>
+                <button class="icon-btn close-sidebar-btn" id="closeSidebarBtn" aria-label="Close Sidebar">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+
+            <ul class="nav-links">
+                <li>
+                    <a href="#" data-target="dashboard" class="active">
+                        <i class="fa-solid fa-house nav-icon"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-target="manage-recipes">
+                        <i class="fa-solid fa-book nav-icon"></i>
+                        <span>Manage Recipes</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-target="search-recipe">
+                        <i class="fa-solid fa-magnifying-glass nav-icon"></i>
+                        <span>Search Recipe</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-target="menu-calculator">
+                        <i class="fa-solid fa-calculator nav-icon"></i>
+                        <span>Menu Calculator</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-target="combined-report">
+                        <i class="fa-solid fa-file-invoice nav-icon"></i>
+                        <span>Combined Report</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <p>sriman 1.0.0</p>
+            </div>
+        </nav>
+
+        <!-- Overlay for mobile sidebar -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <button class="icon-btn menu-btn" id="menuBtn" aria-label="Open Sidebar">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <h1 id="pageTitle" class="page-title">Dashboard</h1>
+                </div>
+
+                <div class="header-actions">
+                    <button class="action-btn outline btn-theme-toggle" id="themeToggle" aria-label="Toggle Theme">
+                        <i class="fa-regular fa-moon"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Scrollable View Container -->
+            <div class="scroll-container">
+                <!-- VIEW: Dashboard -->
+                <section id="dashboard" class="view active-view view-fade-in">
+                    <div class="view-header">
+                        <h2>Welcome Back</h2>
+                        <p class="text-muted">Here's an overview of your recipes and catalogs.</p>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <div class="stat-card nav-card" data-target="manage-recipes">
+                            <div class="stat-icon bg-blue-light">
+                                <i class="fa-solid fa-book text-blue"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>Total Recipes</h3>
+                                <p id="dashRecipeCount" class="stat-number">0</p>
+                            </div>
+                        </div>
+
+                        <div class="stat-card nav-card" data-target="menu-calculator">
+                            <div class="stat-icon bg-green-light">
+                                <i class="fa-solid fa-calculator text-green"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>Quick Calculator</h3>
+                                <p class="stat-desc">Plan your next event</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card recent-section">
+                        <div class="card-header">
+                            <h3>Recently Added Recipes</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="recentRecipesList" class="empty-state">
+                                <i class="fa-solid fa-folder-open empty-icon"></i>
+                                <p>No recipes added yet.</p>
+                                <button class="btn primary nav-card-btn" data-target="manage-recipes">Add Your First
+                                    Recipe</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW: Manage Recipes -->
+                <section id="manage-recipes" class="view">
+                    <div class="view-header">
+                        <h2>Manage Recipes</h2>
+                        <p class="text-muted">Add, edit, or remove your catering recipes.</p>
+                    </div>
+
+                    <div class="split-layout">
+                        <!-- Add/Edit Form -->
+                        <div class="card recipe-form-card">
+                            <div class="card-header">
+                                <h3 id="recipeFormTitle">Add New Recipe</h3>
+                            </div>
+                            <div class="card-body">
+                                <form id="recipeForm">
+                                    <input type="hidden" id="recipeId">
+
+                                    <div class="form-group">
+                                        <label for="recipeName">Dish Name *</label>
+                                        <input type="text" id="recipeName" class="form-control" required
+                                            placeholder="e.g., Butter Chicken">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="recipeBaseServing">Base Serving Size (People) *</label>
+                                        <input type="number" id="recipeBaseServing" class="form-control" required
+                                            min="1" placeholder="e.g., 10">
+                                    </div>
+
+                                    <div class="ingredients-section">
+                                        <div class="section-header">
+                                            <h4>Ingredients</h4>
+                                            <button type="button" class="btn outline small" id="addIngredientBtn">
+                                                <i class="fa-solid fa-plus"></i> Add Row
+                                            </button>
+                                        </div>
+
+                                        <div id="ingredientsList" class="ingredients-list">
+                                            <!-- Ingredient Rows will be appended here -->
+                                        </div>
+                                    </div>
+
+                                    <div class="form-actions mt-4">
+                                        <button type="button" class="btn outline" id="cancelEditBtn"
+                                            style="display: none;">Cancel</button>
+                                        <button type="submit" class="btn primary w-full">Save Recipe</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Saved Recipes List -->
+                        <div class="card saved-recipes-card">
+                            <div class="card-header">
+                                <h3>Saved Recipes</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="search-box mb-3">
+                                    <i class="fa-solid fa-search search-icon"></i>
+                                    <input type="text" id="filterRecipes" class="form-control"
+                                        placeholder="Search saved recipes...">
+                                </div>
+                                <div id="savedRecipesList" class="saved-recipes-list">
+                                    <!-- Rendered dynamically -->
+                                    <div class="empty-state">
+                                        <p>No recipes added yet.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW: Search Recipe -->
+                <section id="search-recipe" class="view">
+                    <div class="view-header">
+                        <h2>Search & Scale Recipe</h2>
+                        <p class="text-muted">Find a recipe and calculate ingredients for a specific number of people.
+                        </p>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <form id="searchRecipeForm" class="search-scale-form">
+                                <div class="form-row">
+                                    <div class="form-group flex-1">
+                                        <label for="searchRecipeSelect">Select Recipe</label>
+                                        <select id="searchRecipeSelect" class="form-control" required>
+                                            <option value="">-- Choose a recipe --</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="searchTargetServing">Target Serving Size</label>
+                                        <input type="number" id="searchTargetServing" class="form-control" required
+                                            min="1" placeholder="e.g., 50">
+                                    </div>
+                                    <div class="form-group align-bottom">
+                                        <button type="submit" class="btn primary w-full">Calculate</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div id="searchResults" class="results-container" style="display: none;">
+                        <div class="card">
+                            <div class="card-header flex-between">
+                                <div>
+                                    <h3 id="resultDishName">Recipe Name</h3>
+                                    <p class="text-muted text-sm">Scaled for <strong id="resultTargetCount">0</strong>
+                                        people (Original: <span id="resultBaseCount">0</span>)</p>
+                                </div>
+                                <div class="multiplier-badge" id="resultMultiplier">1x</div>
+                            </div>
+                            <div class="card-body">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Ingredient</th>
+                                            <th>Quantity</th>
+                                            <th>Unit</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="resultIngredientsList">
+                                        <!-- Rendered dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW: Menu Calculator -->
+                <section id="menu-calculator" class="view">
+                    <div class="view-header">
+                        <h2>Menu Calculator</h2>
+                        <p class="text-muted">Combine multiple recipes and calculate aggregate ingredient totals.</p>
+                    </div>
+
+                    <div class="split-layout">
+                        <!-- Selection Area -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Add to Menu</h3>
+                            </div>
+                            <div class="card-body">
+                                <form id="addMenuForm">
+                                    <!-- Hidden field to hold the selected recipe ID -->
+                                    <input type="hidden" id="menuRecipeId">
+                                    <div class="form-group">
+                                        <label for="menuRecipeSearch">Search Recipe</label>
+                                        <div class="autocomplete-wrapper" id="menuRecipeAutocomplete">
+                                            <div class="autocomplete-input-wrap">
+                                                <i class="fa-solid fa-magnifying-glass autocomplete-icon"></i>
+                                                <input type="text" id="menuRecipeSearch"
+                                                    class="form-control autocomplete-input"
+                                                    placeholder="Type to search recipes..." autocomplete="off">
+                                            </div>
+                                            <ul class="autocomplete-dropdown" id="menuRecipeDropdown" role="listbox">
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="menuTargetServing">Number of People for this Dish</label>
+                                        <input type="number" id="menuTargetServing" class="form-control" required
+                                            min="1" placeholder="e.g., 50">
+                                    </div>
+                                    <button type="submit" class="btn outline w-full">
+                                        <i class="fa-solid fa-plus"></i> Add to Menu
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Current Menu List Area -->
+                        <div class="card bg-surface-alt">
+                            <div class="card-header flex-between">
+                                <h3>Current Menu Items</h3>
+                                <span class="badge" id="menuItemCount">0 Items</span>
+                            </div>
+                            <div class="card-body">
+                                <div id="currentMenuList" class="selected-menu-list">
+                                    <div class="empty-state py-2">
+                                        <p>No dishes added to the menu yet.</p>
+                                    </div>
+                                </div>
+
+                                <div class="form-actions mt-4" id="generateReportActions" style="display: none;">
+                                    <button type="button" class="btn primary w-full" id="generateReportBtn">Generate
+                                        Combined Report</button>
+                                    <button type="button" class="btn danger w-full" id="clearMenuBtn">Clear</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW: Combined Report -->
+                <section id="combined-report" class="view">
+                    <div class="view-header flex-between">
+                        <div>
+                            <h2>Combined Ingredients Report</h2>
+                            <p class="text-muted">Review, export, or share your generated ingredient lists.</p>
+                        </div>
+                        <div class="header-actions-group">
+                            <button class="btn outline" id="shareReportBtn" style="display: none;">
+                                <i class="fa-solid fa-share-nodes"></i> Share
+                            </button>
+                            <button class="btn primary" id="exportPdfBtn" style="display: none;">
+                                <i class="fa-solid fa-file-pdf"></i> Export PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="reportContainer">
+                        <div class="empty-state card">
+                            <i class="fa-solid fa-file-invoice empty-icon"></i>
+                            <p>No report generated yet. Add items in the Menu Calculator first.</p>
+                            <button class="btn primary nav-card-btn" data-target="menu-calculator">Go to
+                                Calculator</button>
+                        </div>
+                    </div>
+
+                    <!-- Hidden Template for the Report -->
+                    <template id="reportTemplate">
+                        <div class="report-content">
+                            <!-- Menu Summary -->
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h3>Menu Summary</h3>
+                                </div>
+                                <div class="card-body">
+                                    <ul id="reportMenuSummary" class="menu-summary-list">
+                                        <!-- Rendered dynamically -->
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Combined Ingredients -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3>Consolidated Shopping List</h3>
+                                    <p class="text-sm text-muted">Ingredients with matching names and units are
+                                        combined.</p>
+                                </div>
+                                <div class="card-body">
+                                    <table class="data-table" id="reportTableForPdf">
+                                        <thead>
+                                            <tr>
+                                                <th>Ingredient</th>
+                                                <th>Total Quantity</th>
+                                                <th>Unit</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="reportIngredientsList">
+                                            <!-- Rendered dynamically -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Global Toast Notification System -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Main JavaScript Logic -->
+    <script src="app.js"></script>
+</body>
+
+</html>
