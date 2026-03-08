@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
-const connectDB = require('./config/db');
+const connectDB = require("./config/db");
 
 const app = express();
 
