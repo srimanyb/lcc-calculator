@@ -6,7 +6,7 @@ const AnalyticsEvent = require('../models/AnalyticsEvent');
 const auth = require('../middleware/auth');
 
 // GET /api/recipes?page=1&limit=20&public=true
-router.get('/', async (req, res) => {
+router.get('/', auth, async (req, res) => {
     try {
         const page = Math.max(parseInt(req.query.page) || 1, 1);
         const limit = Math.min(parseInt(req.query.limit) || 20, 100);
@@ -36,6 +36,7 @@ router.get('/', async (req, res) => {
 
 // GET /api/recipes/search?q=butter+chicken
 router.get('/search', [
+    auth,
     query('q').trim().notEmpty().withMessage('Search query required'),
 ], async (req, res) => {
     const errors = validationResult(req);
@@ -66,7 +67,7 @@ router.get('/search', [
 });
 
 // GET /api/recipes/:id
-router.get('/:id', async (req, res) => {
+router.get('/:id', auth, async (req, res) => {
     try {
         const recipe = await Recipe.findById(req.params.id).populate('owner', 'name').lean();
         if (!recipe) return res.status(404).json({ message: 'Recipe not found.' });
@@ -88,6 +89,7 @@ router.get('/:id', async (req, res) => {
 
 // POST /api/recipes
 router.post('/', [
+    auth,
     body('name').trim().notEmpty().withMessage('Recipe name is required').isLength({ max: 120 }),
     body('baseServing').isInt({ min: 1 }).withMessage('Base serving must be a positive integer'),
     body('ingredients').isArray({ min: 1 }).withMessage('At least one ingredient is required'),
@@ -95,8 +97,13 @@ router.post('/', [
     body('ingredients.*.qty').isFloat({ min: 0 }).withMessage('Ingredient quantity must be a positive number'),
     body('ingredients.*.unit').trim().notEmpty().withMessage('Ingredient unit required'),
 ], async (req, res) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Only admins can create recipes.' });
+    }
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
 
     try {
         const { name, baseServing, ingredients, tags, isPublic } = req.body;
@@ -121,18 +128,18 @@ router.post('/', [
 
 // PUT /api/recipes/:id
 router.put('/:id', [
+    auth,
     body('name').optional().trim().notEmpty().isLength({ max: 120 }),
     body('baseServing').optional().isInt({ min: 1 }),
     body('ingredients').optional().isArray({ min: 1 }),
 ], async (req, res) => {
     try {
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Only admins can edit recipes.' });
+        }
+
         const recipe = await Recipe.findById(req.params.id);
         if (!recipe) return res.status(404).json({ message: 'Recipe not found.' });
-
-        const isOwner = recipe.owner.toString() === req.user._id.toString();
-        if (!isOwner && req.user.role !== 'admin') {
-            return res.status(403).json({ message: 'You do not have permission to edit this recipe.' });
-        }
 
         const allowedFields = ['name', 'baseServing', 'ingredients', 'tags', 'isPublic'];
         allowedFields.forEach((field) => {
@@ -148,15 +155,14 @@ router.put('/:id', [
 });
 
 // DELETE /api/recipes/:id
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
     try {
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Only admins can delete recipes.' });
+        }
+
         const recipe = await Recipe.findById(req.params.id);
         if (!recipe) return res.status(404).json({ message: 'Recipe not found.' });
-
-        const isOwner = recipe.owner.toString() === req.user._id.toString();
-        if (!isOwner && req.user.role !== 'admin') {
-            return res.status(403).json({ message: 'You do not have permission to delete this recipe.' });
-        }
 
         await recipe.deleteOne();
         AnalyticsEvent.create({ eventType: 'recipe_delete', userId: req.user._id, recipeId: recipe._id }).catch(() => {});
@@ -169,7 +175,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // POST /api/recipes/:id/use — increment useCount when added to Menu Calculator
-router.post('/:id/use', async (req, res) => {
+router.post('/:id/use', auth, async (req, res) => {
     try {
         await Recipe.findByIdAndUpdate(req.params.id, { $inc: { useCount: 1 } });
         AnalyticsEvent.create({ eventType: 'recipe_use', userId: req.user._id, recipeId: req.params.id }).catch(() => {});

@@ -40,4 +40,9 @@ export const api = {
   updateRecipe: (id, body) => request(`/api/recipes/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   deleteRecipe: (id)     => request(`/api/recipes/${id}`, { method: 'DELETE' }),
   useRecipe:  (id)       => request(`/api/recipes/${id}/use`, { method: 'POST' }),
+
+  // Events
+  getEvents:    ()       => request('/api/events'),
+  getEvent:     (id)     => request(`/api/events/${id}`),
+  createEvent:  (body)   => request('/api/events', { method: 'POST', body: JSON.stringify(body) }),
 };

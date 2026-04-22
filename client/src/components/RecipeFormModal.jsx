@@ -74,6 +74,8 @@ export default function RecipeFormModal({ initial, onSaved, onClose }) {
       ingredients: cleanIngredients,
     };
 
+    console.log('[RecipeForm] Submitting payload:', payload);
+
     setSaving(true);
     try {
       let saved;
@@ -86,7 +88,8 @@ export default function RecipeFormModal({ initial, onSaved, onClose }) {
       }
       onSaved(saved, isEdit);
     } catch (err) {
-      setError(err.message);
+      console.error('[RecipeForm] Error:', err);
+      setError(err.message || 'An unexpected error occurred.');
     } finally {
       setSaving(false);
     }

@@ -3,12 +3,12 @@ import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
-import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import RecipesPage from './pages/RecipesPage';
 import RecipeDetailPage from './pages/RecipeDetailPage';
 import CalculatorPage from './pages/CalculatorPage';
+import SavedEventsPage from './pages/SavedEventsPage';
 
 export default function App() {
   return (
@@ -16,7 +16,7 @@ export default function App() {
       <ToastProvider>
         <Navbar />
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/recipes" element={
@@ -28,7 +28,10 @@ export default function App() {
           <Route path="/calculator" element={
             <ProtectedRoute><CalculatorPage /></ProtectedRoute>
           } />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="/saved-events" element={
+            <ProtectedRoute><SavedEventsPage /></ProtectedRoute>
+          } />
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </ToastProvider>
     </AuthProvider>

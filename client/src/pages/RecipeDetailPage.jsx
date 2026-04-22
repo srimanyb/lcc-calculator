@@ -3,6 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
+import RecipeFormModal from '../components/RecipeFormModal';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 export default function RecipeDetailPage() {
   const { id } = useParams();
@@ -13,6 +16,7 @@ export default function RecipeDetailPage() {
   const [recipe, setRecipe]   = useState(null);
   const [loading, setLoading] = useState(true);
   const [servings, setServings] = useState(1);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     api.getRecipe(id)
@@ -48,6 +52,42 @@ export default function RecipeDetailPage() {
     } catch (err) {
       addToast(err.message, 'error');
     }
+  };
+
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(22);
+    doc.text(recipe.name, 14, 20);
+    doc.setFontSize(12);
+    doc.text(`Scaled for: ${servings} servings (Base: ${recipe.baseServing})`, 14, 30);
+    
+    const rows = recipe.ingredients.map(ing => [ing.name, ing.qty, scale(ing.qty), ing.unit]);
+    doc.autoTable({
+      startY: 40,
+      head: [['Ingredient', 'Original Qty', 'Scaled Qty', 'Unit']],
+      body: rows,
+      theme: 'striped',
+    });
+    doc.save(`${recipe.name.replace(/\s+/g, '_')}_${servings}servings.pdf`);
+    addToast('PDF downloaded ✓', 'success');
+  };
+
+  const handleDelete = async () => {
+    if (!confirm(`Delete "${recipe.name}"? This cannot be undone.`)) return;
+    try {
+      await api.deleteRecipe(id);
+      addToast('Recipe deleted.', 'success');
+      navigate('/recipes');
+    } catch (err) {
+      addToast(err.message, 'error');
+    }
+  };
+
+  const handleSaved = (updatedRecipe) => {
+    setRecipe(updatedRecipe);
+    setServings(updatedRecipe.baseServing);
+    setShowEditModal(false);
+    addToast('Recipe updated ✓', 'success');
   };
 
   if (loading) return <div className="loading"><div className="spinner" /> Loading recipe…</div>;
@@ -101,7 +141,14 @@ export default function RecipeDetailPage() {
             id="serving-decrease"
             onClick={() => setServings(s => Math.max(1, s - 1))}
           >−</button>
-          <div className="serving-number">{servings}</div>
+          <input
+            type="number"
+            min="1"
+            className="form-input"
+            value={servings}
+            onChange={e => setServings(parseInt(e.target.value) || 1)}
+            style={{ width: '80px', textAlign: 'center', fontSize: '1.2rem', fontWeight: '700', padding: '0.4rem', color: 'var(--accent-1)' }}
+          />
           <button
             className="serving-btn"
             id="serving-increase"
@@ -136,12 +183,32 @@ export default function RecipeDetailPage() {
         </div>
 
         {/* Actions */}
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <button id="add-to-calc-btn" className="btn btn-primary" onClick={addToCalculator}>
-            🧮 Add to Calculator
-          </button>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button id="add-to-calc-btn" className="btn btn-primary" onClick={addToCalculator}>
+              🧮 Add to Calculator
+            </button>
+            <button className="btn btn-ghost" onClick={exportPDF}>
+              📄 Export Scaled List
+            </button>
+          </div>
+          
+          {user?.role === 'admin' && (
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button className="btn btn-ghost" onClick={() => setShowEditModal(true)}>✏️ Edit Recipe</button>
+              <button className="btn btn-danger" onClick={handleDelete}>🗑 Delete</button>
+            </div>
+          )}
         </div>
       </div>
+
+      {showEditModal && (
+        <RecipeFormModal
+          initial={recipe}
+          onSaved={handleSaved}
+          onClose={() => setShowEditModal(false)}
+        />
+      )}
     </div>
   );
 }

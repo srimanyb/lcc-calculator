@@ -1,8 +1,8 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
-const path = require('path');
 const connectDB = require("./config/db");
 
 const app = express();
@@ -50,27 +50,34 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/recipes', require('./routes/recipes'));
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/events', require('./routes/events'));
 
 // Health check
 app.get('/api/health', (req, res) =>
     res.json({ status: 'ok', timestamp: new Date().toISOString() })
 );
 
-// ─── Serve Static Frontend (only used when running Express locally with built client) ──
-const CLIENT_DIST = path.join(__dirname, 'client', 'dist');
-const fs = require('fs');
-if (fs.existsSync(CLIENT_DIST)) {
-    app.use(express.static(CLIENT_DIST));
-    // SPA fallback — all non-API routes serve index.html
-    app.get('*', (req, res) => {
-        res.sendFile(path.join(CLIENT_DIST, 'index.html'));
-    });
-} else {
-    // Dev mode: no built frontend
-    app.get('*', (req, res) => {
-        res.json({ message: 'API server running. Frontend served separately by Vite (localhost:5173).' });
-    });
-}
+// Test route
+app.get("/api/test", (req, res) => res.json({ message: "working" }));
+
+// ─── Serve Static Frontend ───────────────────────────────────────────────────
+const CLIENT_DIST = path.join(__dirname, '..', 'client', 'dist');
+
+// Serve static files from the Vite build directory
+app.use(express.static(CLIENT_DIST));
+
+// SPA fallback — all non-API routes serve index.html
+app.get('*', (req, res) => {
+    const indexPath = path.join(CLIENT_DIST, 'index.html');
+    if (require('fs').existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        res.status(404).json({ 
+            message: 'Frontend not built. Run "npm run build" first.',
+            path: indexPath
+        });
+    }
+});
 
 // ─── Error Handler ────────────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
@@ -79,7 +86,7 @@ app.use((err, req, res, next) => {
 });
 
 // ─── Start ────────────────────────────────────────────────────────────────────
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, "0.0.0.0", () => {
     console.log(`✅ Server running on http://localhost:${PORT}`);

@@ -93,13 +93,15 @@ export default function RecipesPage() {
               onChange={e => setQuery(e.target.value)}
             />
           </form>
-          <button
-            id="add-recipe-btn"
-            className="btn btn-primary"
-            onClick={() => { setEditTarget(null); setShowModal(true); }}
-          >
-            + New Recipe
-          </button>
+          {user?.role === 'admin' && (
+            <button
+              id="add-recipe-btn"
+              className="btn btn-primary"
+              onClick={() => { setEditTarget(null); setShowModal(true); }}
+            >
+              + New Recipe
+            </button>
+          )}
         </div>
       </div>
 
@@ -146,18 +148,6 @@ export default function RecipesPage() {
                 <div className="recipe-stats">
                   <span className="stat">👁 <strong>{recipe.viewCount || 0}</strong></span>
                   <span className="stat">🍽 <strong>{recipe.useCount || 0}</strong> uses</span>
-                </div>
-                <div style={{ display: 'flex', gap: '0.4rem' }}>
-                  <button
-                    className="btn-icon"
-                    title="Edit"
-                    onClick={e => openEdit(recipe, e)}
-                  >✏️</button>
-                  <button
-                    className="btn-icon"
-                    title="Delete"
-                    onClick={e => { e.stopPropagation(); handleDelete(recipe._id, recipe.name); }}
-                  >🗑</button>
                 </div>
               </div>
             </div>

@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
+import EventFormModal from '../components/EventFormModal';
 
 export default function CalculatorPage() {
   const { addToast } = useToast();
   const navigate = useNavigate();
 
   const [items, setItems] = useState([]);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   useEffect(() => {
     const saved = JSON.parse(sessionStorage.getItem('mm_calc') || '[]');
@@ -20,8 +22,9 @@ export default function CalculatorPage() {
   };
 
   const updateServings = (id, val) => {
+    const num = parseInt(val) || 0;
     const updated = items.map(r =>
-      r._id === id ? { ...r, targetServings: Math.max(1, parseInt(val) || 1) } : r
+      r._id === id ? { ...r, targetServings: num } : r
     );
     setItems(updated);
     sessionStorage.setItem('mm_calc', JSON.stringify(updated));
@@ -31,6 +34,7 @@ export default function CalculatorPage() {
   const aggregateIngredients = () => {
     const map = {};
     items.forEach(recipe => {
+      if (!recipe.targetServings || recipe.targetServings < 1) return;
       const ratio = recipe.targetServings / recipe.baseServing;
       recipe.ingredients.forEach(ing => {
         const key = `${ing.name.toLowerCase()}__${ing.unit.toLowerCase()}`;
@@ -60,11 +64,18 @@ export default function CalculatorPage() {
     <div className="page">
       <div className="page-header">
         <h1 className="page-title">Menu Calculator</h1>
-        {aggregated.length > 0 && (
-          <button id="export-csv-btn" className="btn btn-ghost" onClick={exportCSV}>
-            📥 Export CSV
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          {aggregated.length > 0 && (
+            <>
+              <button className="btn btn-ghost" onClick={exportCSV}>
+                📥 Export CSV
+              </button>
+              <button id="save-event-trigger" className="btn btn-primary" onClick={() => setShowSaveModal(true)}>
+                💾 Save as Event
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {items.length === 0 ? (
@@ -89,42 +100,37 @@ export default function CalculatorPage() {
               {items.map(recipe => (
                 <div key={recipe._id} className="card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
-                    <div>
+                    <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{recipe.name}</div>
                       <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                         Base: {recipe.baseServing} servings
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <button
-                        className="serving-btn"
-                        onClick={() => updateServings(recipe._id, recipe.targetServings - 1)}
-                      >−</button>
-                      <input
-                        type="number"
-                        min="1"
-                        value={recipe.targetServings}
-                        onChange={e => updateServings(recipe._id, e.target.value)}
-                        style={{
-                          width: '52px', textAlign: 'center',
-                          background: 'var(--bg-hover)',
-                          border: '1px solid var(--border)',
-                          borderRadius: 'var(--radius-sm)',
-                          padding: '0.35rem',
-                          color: 'var(--accent-1)',
-                          fontWeight: 700,
-                        }}
-                      />
-                      <button
-                        className="serving-btn"
-                        onClick={() => updateServings(recipe._id, recipe.targetServings + 1)}
-                      >+</button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                        <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.2rem' }}>SERVINGS</label>
+                        <input
+                          type="number"
+                          min="1"
+                          className="form-input"
+                          value={recipe.targetServings}
+                          onChange={e => updateServings(recipe._id, e.target.value)}
+                          style={{
+                            width: '80px', 
+                            textAlign: 'center',
+                            height: '38px',
+                            fontSize: '1rem',
+                            fontWeight: 700,
+                            color: 'var(--accent-1)'
+                          }}
+                        />
+                      </div>
                       <button
                         className="btn-icon"
                         title="Remove"
                         onClick={() => removeItem(recipe._id)}
-                        style={{ marginLeft: '0.25rem', color: 'var(--accent-danger)' }}
-                      >✕</button>
+                        style={{ marginTop: '1.2rem', color: 'var(--accent-danger)' }}
+                      >🗑</button>
                     </div>
                   </div>
                 </div>
@@ -154,7 +160,9 @@ export default function CalculatorPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {aggregated.map((ing, i) => (
+                  {aggregated.length === 0 ? (
+                    <tr><td colSpan="3" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Adjust servings to see totals</td></tr>
+                  ) : aggregated.map((ing, i) => (
                     <tr key={i}>
                       <td>{ing.name}</td>
                       <td style={{ textAlign: 'right' }}>
@@ -168,6 +176,15 @@ export default function CalculatorPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {showSaveModal && (
+        <EventFormModal
+          menuItems={items}
+          aggregatedList={aggregated}
+          onSaved={() => { setShowSaveModal(false); navigate('/saved-events'); }}
+          onClose={() => setShowSaveModal(false)}
+        />
       )}
     </div>
   );
