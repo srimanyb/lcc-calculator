@@ -88,16 +88,18 @@ app.use((err, req, res, next) => {
 // ─── Start ────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3001;
 
-app.listen(PORT, "0.0.0.0", () => {
-    console.log(`✅ Server running on http://localhost:${PORT}`);
-}).on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-        console.error(`❌ Port ${PORT} is already in use. Free it and retry.`);
-        console.error(`   Run: taskkill /IM node.exe /F`);
-    } else {
-        console.error('[Server Error]', err);
-    }
-    process.exit(1);
-});
+if (!process.env.VERCEL) {
+    app.listen(PORT, "0.0.0.0", () => {
+        console.log(`✅ Server running on http://localhost:${PORT}`);
+    }).on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+            console.error(`❌ Port ${PORT} is already in use. Free it and retry.`);
+            console.error(`   Run: taskkill /IM node.exe /F`);
+        } else {
+            console.error('[Server Error]', err);
+        }
+        process.exit(1);
+    });
+}
 
 module.exports = app;
