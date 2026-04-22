@@ -2,7 +2,6 @@
   "name": "menumaster",
   "version": "1.0.0",
   "description": "Full-stack recipe catering calculator",
-  "main": "server.js",
   "scripts": {
     "start": "npm run dev",
     "backend": "cd server && npm run dev",
