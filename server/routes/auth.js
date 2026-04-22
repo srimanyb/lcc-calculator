@@ -41,10 +41,9 @@ router.post('/register', [
         });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Server error during registration.' });
+        res.status(500).json({ message: `Server error during registration: ${err.message}` });
     }
 });
-
 // POST /api/auth/login
 router.post('/login', [
     body('email').isEmail().normalizeEmail(),
@@ -75,10 +74,9 @@ router.post('/login', [
         });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Server error during login.' });
+        res.status(500).json({ message: `Server error during login: ${err.message}` });
     }
 });
-
 // GET /api/auth/me
 router.get('/me', auth, (req, res) => {
     res.json({
