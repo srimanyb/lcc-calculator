@@ -14,15 +14,25 @@ connectDB();
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
+  'http://localhost:3001',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3001',
   /\.vercel\.app$/,
 ];
 app.use(cors({
   origin: (origin, cb) => {
     // allow requests with no origin (mobile apps, curl, Render health checks)
     if (!origin) return cb(null, true);
+    
     const ok = allowedOrigins.some(o =>
       typeof o === 'string' ? o === origin : o.test(origin)
     );
+    
+    if (!ok) {
+      console.warn(`⚠️ CORS blocked request from origin: ${origin}`);
+    }
+    
     cb(ok ? null : new Error('Not allowed by CORS'), ok);
   },
   credentials: true,
