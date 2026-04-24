@@ -1,5 +1,7 @@
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+const dotenv = require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+console.log(`📝 Environment loaded: ${dotenv.error ? '❌ FAILED' : '✅ SUCCESS'}`);
+if (dotenv.error) console.warn(`   Trying to load from root: ${path.join(__dirname, '..', '.env')}`);
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
