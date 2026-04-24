@@ -4,9 +4,10 @@
   "description": "Full-stack recipe catering calculator",
   "scripts": {
     "start": "npm run dev",
+    "kill-ports": "npx kill-port 3000 3001 || exit 0",
     "backend": "cd server && npm run dev",
     "frontend": "cd client && npm run dev",
-    "dev": "npx concurrently \"npm run backend\" \"npm run frontend\"",
+    "dev": "npm run kill-ports && npx concurrently \"npm run backend\" \"npm run frontend\"",
     "build": "npm install --prefix client && npm run build --prefix client"
   },
   "dependencies": {

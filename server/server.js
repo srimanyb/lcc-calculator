@@ -15,7 +15,9 @@ const app = express();
 // ─── DB Wait Middleware ──────────────────────────────────────────────────────
 app.use((req, res, next) => {
     // 0: disconnected, 1: connected, 2: connecting, 3: disconnecting
-    if (mongoose.connection.readyState !== 1 && !req.path.startsWith('/api/health')) {
+    // Only block if we are completely disconnected (0) or disconnecting (3)
+    if ([0, 3].includes(mongoose.connection.readyState) && !req.path.startsWith('/api/health')) {
+        console.warn(`[DB Middleware] Request blocked. readyState: ${mongoose.connection.readyState} (Expected 1)`);
         return res.status(503).json({ 
             message: "Database is connecting. Please refresh in a few seconds..." 
         });
@@ -116,14 +118,18 @@ const startServer = async () => {
         
         // Only start listening if NOT on Vercel (Vercel handles the listener)
         if (!process.env.VERCEL) {
-            app.listen(PORT, "0.0.0.0", () => {
+            const server = app.listen(PORT, "0.0.0.0", () => {
                 console.log(`🚀 Server running on http://localhost:${PORT}`);
-            }).on('error', (err) => {
+            });
+
+            server.on('error', (err) => {
                 if (err.code === 'EADDRINUSE') {
-                    console.error(`❌ Port ${PORT} is already in use. Free it and retry.`);
-                    console.error(`   Run: taskkill /IM node.exe /F`);
+                    console.error(`\n❌ Error: Port ${PORT} is already in use.`);
+                    console.error(`   The server cannot start because another process is using this port.`);
+                    console.error(`   👉 FIX: I have added a 'kill-ports' script. Run: npm run kill-ports`);
+                    console.error(`   Or manually run: taskkill /IM node.exe /F\n`);
                 } else {
-                    console.error('[Server Error]', err);
+                    console.error('[Server Start Error]', err);
                 }
                 process.exit(1);
             });
@@ -151,6 +157,17 @@ const gracefulShutdown = async (signal) => {
 
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+
+// ─── Global Error Handlers ───────────────────────────────────────────────────
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('🔥 Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('💥 Uncaught Exception:', err);
+    // Give time to log then exit
+    setTimeout(() => process.exit(1), 1000);
+});
 
 startServer();
 

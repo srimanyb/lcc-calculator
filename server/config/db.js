@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 // Global configuration
-mongoose.set('bufferCommands', false); // Fail fast instead of waiting 10s
+mongoose.set('bufferCommands', true); // Wait for connection instead of failing immediately
 
 const connectDB = async () => {
   // Prevent multiple connections in serverless environments
@@ -23,7 +23,7 @@ const connectDB = async () => {
     console.error(`   Message: ${error.message}`);
     console.error(`   URI: ${uri ? uri.replace(/:([^:@]+)@/, ':****@') : 'MISSING'}`); 
     
-    if (uri && uri.includes('127.0.0.1')) {
+    if (uri && (uri.includes('127.0.0.1') || uri.includes('localhost'))) {
       console.warn("   💡 TIP: If using local MongoDB, ensure the service is running (Check Windows Services).");
     }
     
