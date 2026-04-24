@@ -3,12 +3,12 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
+const mongoose = require('mongoose');
 const connectDB = require("./config/db");
 
 const app = express();
 
-// Connect to MongoDB
-connectDB();
+// MongoDB connection is handled in startServer() at the bottom of the file
 
 // ─── Global Middleware ────────────────────────────────────────────────────────
 const allowedOrigins = [
@@ -98,18 +98,49 @@ app.use((err, req, res, next) => {
 // ─── Start ────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3001;
 
-if (!process.env.VERCEL) {
-    app.listen(PORT, "0.0.0.0", () => {
-        console.log(`✅ Server running on http://localhost:${PORT}`);
-    }).on('error', (err) => {
-        if (err.code === 'EADDRINUSE') {
-            console.error(`❌ Port ${PORT} is already in use. Free it and retry.`);
-            console.error(`   Run: taskkill /IM node.exe /F`);
-        } else {
-            console.error('[Server Error]', err);
+const startServer = async () => {
+    try {
+        // Connect to MongoDB
+        await connectDB();
+        
+        // Only start listening if NOT on Vercel (Vercel handles the listener)
+        if (!process.env.VERCEL) {
+            app.listen(PORT, "0.0.0.0", () => {
+                console.log(`🚀 Server running on http://localhost:${PORT}`);
+            }).on('error', (err) => {
+                if (err.code === 'EADDRINUSE') {
+                    console.error(`❌ Port ${PORT} is already in use. Free it and retry.`);
+                    console.error(`   Run: taskkill /IM node.exe /F`);
+                } else {
+                    console.error('[Server Error]', err);
+                }
+                process.exit(1);
+            });
         }
+    } catch (err) {
+        console.error('❌ Failed to start server due to database connection error.');
+        // If not on Vercel, we already handle exit in db.js, 
+        // but this is a safety net.
+        if (!process.env.VERCEL) process.exit(1);
+    }
+};
+
+// ─── Graceful Shutdown ───────────────────────────────────────────────────────
+const gracefulShutdown = async (signal) => {
+    console.log(`\nReceived ${signal}. Shutting down gracefully...`);
+    try {
+        await mongoose.connection.close();
+        console.log('✅ MongoDB connection closed.');
+        process.exit(0);
+    } catch (err) {
+        console.error('❌ Error during shutdown:', err);
         process.exit(1);
-    });
-}
+    }
+};
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+
+startServer();
 
 module.exports = app;
