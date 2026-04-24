@@ -12,7 +12,16 @@ const app = express();
 
 // MongoDB connection is handled in startServer() at the bottom of the file
 
-// ─── Global Middleware ────────────────────────────────────────────────────────
+// ─── DB Wait Middleware ──────────────────────────────────────────────────────
+app.use((req, res, next) => {
+    // 0: disconnected, 1: connected, 2: connecting, 3: disconnecting
+    if (mongoose.connection.readyState !== 1 && !req.path.startsWith('/api/health')) {
+        return res.status(503).json({ 
+            message: "Database is connecting. Please refresh in a few seconds..." 
+        });
+    }
+    next();
+});
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
