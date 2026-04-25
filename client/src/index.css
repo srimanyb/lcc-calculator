@@ -245,7 +245,33 @@ input, textarea, select {
 .feature-card p { font-size: 0.87rem; color: var(--text-secondary); line-height: 1.6; }
 
 /* ── Page layout ─────────────────────────────────────────────────────────────── */
-.page { max-width: 1100px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+.page { 
+  max-width: 1100px; 
+  margin: 0 auto; 
+  padding: 2.5rem 1.5rem 4rem; 
+  position: relative;
+  z-index: 1;
+}
+
+.page::before {
+  content: '';
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60vw;
+  height: 60vh;
+  max-width: 800px;
+  max-height: 800px;
+  background-image: url('/logo-bg.png');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.08; /* Very subtle watermark */
+  z-index: -1;
+  pointer-events: none;
+}
+
 .page-header {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;
