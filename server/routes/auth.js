@@ -6,10 +6,12 @@ const User = require('../models/User');
 const AnalyticsEvent = require('../models/AnalyticsEvent');
 const auth = require('../middleware/auth');
 
-const issueToken = (userId) =>
-    jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+const issueToken = (userId) => {
+    const secret = process.env.JWT_SECRET || 'menumaster_super_secret_change_in_production_2024';
+    return jwt.sign({ id: userId }, secret, {
         expiresIn: process.env.JWT_EXPIRES_IN || '7d',
     });
+};
 
 // POST /api/auth/register
 router.post('/register', [
