@@ -377,11 +377,19 @@ select.form-input option {
   align-items: center;
   justify-content: center;
   padding: 2rem;
+  background-image: url('/bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   position: relative;
   overflow-x: hidden;
 }
 .auth-page::before {
-  display: none;
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75); /* Dark overlay for text clarity */
+  pointer-events: none;
 }
 .auth-logo {
   position: relative;
