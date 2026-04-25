@@ -388,7 +388,7 @@ select.form-input option {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75); /* Dark overlay for text clarity */
+  background: transparent; /* Removed dark overlay for full clarity */
   pointer-events: none;
 }
 .auth-logo {
