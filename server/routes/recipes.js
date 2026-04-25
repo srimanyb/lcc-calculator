@@ -4,6 +4,7 @@ const { body, query, validationResult } = require('express-validator');
 const Recipe = require('../models/Recipe');
 const AnalyticsEvent = require('../models/AnalyticsEvent');
 const auth = require('../middleware/auth');
+const adminOnly = require('../middleware/adminOnly');
 
 // GET /api/recipes?page=1&limit=20&public=true
 router.get('/', auth, async (req, res) => {
