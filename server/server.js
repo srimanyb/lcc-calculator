@@ -33,7 +33,7 @@ app.use(async (req, res, next) => {
     if (req.path.startsWith('/api/health')) return next();
 
     try {
-        const mongoUri = process.env.MONGO_URI || "mongodb+srv://sriman:Sriman10@cluster0.vs6trum.mongodb.net/menumaster?retryWrites=true&w=majority";
+        const mongoUri = process.env.MONGO_URI || "mongodb+srv://sriman:Sriman%4010@cluster0.vs6trum.mongodb.net/menumaster?retryWrites=true&w=majority";
 
         if (!mongoUri) {
             throw new Error("MONGO_URI is missing from environment variables.");
