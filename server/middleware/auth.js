@@ -9,7 +9,8 @@ module.exports = async (req, res, next) => {
         }
 
         const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const secret = process.env.JWT_SECRET || 'menumaster_super_secret_change_in_production_2024';
+        const decoded = jwt.verify(token, secret);
 
         const user = await User.findById(decoded.id);
         if (!user) {
