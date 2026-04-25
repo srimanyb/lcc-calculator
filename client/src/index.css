@@ -267,7 +267,7 @@ input, textarea, select {
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
-  opacity: 0.1; /* Subtle watermark */
+  opacity: 0.25; /* Increased visibility to 25% */
   z-index: -1;
   pointer-events: none;
 }
@@ -612,7 +612,7 @@ select.form-input option {
   .page::before {
     width: 80vw;
     height: 80vw;
-    opacity: 0.05;
+    opacity: 0.2; /* Clearer on mobile */
   }
   .logo-container {
     flex-direction: column !important;
