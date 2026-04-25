@@ -15,7 +15,7 @@ const connectDB = async () => {
   }
 
   try {
-    const uri = process.env.MONGO_URI;
+    const uri = process.env.MONGO_URI || "mongodb+srv://sriman:Sriman10@cluster0.vs6trum.mongodb.net/menumaster?retryWrites=true&w=majority";
     
     if (!uri) {
       throw new Error("MONGO_URI is missing. Please add it to your Vercel Environment Variables.");
