@@ -3,9 +3,31 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const connectDB = require("./config/db");
+const User = require("./models/User");
+const bcrypt = require("bcryptjs");
 
 // Load env vars
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+
+const seedAdmin = async () => {
+    try {
+        const adminEmail = 'admin@lcc.com';
+        const existing = await User.findOne({ email: adminEmail });
+        if (!existing) {
+            console.log('🌱 Seeding admin account...');
+            const passwordHash = await bcrypt.hash('admin123', 10);
+            await User.create({
+                name: 'LCC Admin',
+                email: adminEmail,
+                passwordHash: passwordHash,
+                role: 'admin'
+            });
+            console.log('✅ Admin seeded successfully.');
+        }
+    } catch (err) {
+        console.error('❌ Seeding failed:', err.message);
+    }
+};
 
 const app = express();
 
@@ -42,6 +64,7 @@ app.use(async (req, res, next) => {
         if (mongoose.connection.readyState === 0) {
             console.log(`[DB] Connecting for ${req.path}...`);
             await connectDB();
+            await seedAdmin();
         }
         next();
     } catch (err) {
@@ -89,6 +112,7 @@ if (!process.env.VERCEL) {
 const startServer = async () => {
     try {
         await connectDB();
+        await seedAdmin();
         const PORT = process.env.PORT || 3001;
         app.listen(PORT, "0.0.0.0", () => {
             console.log(`🚀 Server running on http://localhost:${PORT}`);
