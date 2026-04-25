@@ -1,5 +1,6 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Logo from './Logo';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -17,13 +18,8 @@ export default function Navbar() {
 
   return (
     <nav className="navbar">
-      <Link to="/" className="navbar-brand" style={{ display: 'flex', alignItems: 'baseline', gap: '4px', textDecoration: 'none' }}>
-        <span style={{ fontFamily: "'Brush Script MT', 'Lucida Handwriting', cursive", color: '#1f7a5c', fontSize: '1.8rem', fontWeight: '500' }}>
-          Laxmi Chandra
-        </span>
-        <span style={{ fontFamily: "'Inter', sans-serif", color: '#ffffff', fontSize: '0.75rem', fontWeight: '400', letterSpacing: '2px', textTransform: 'uppercase' }}>
-          Caterers<sup style={{ fontSize: '0.5rem' }}>®</sup>
-        </span>
+      <Link to="/" className="navbar-brand" style={{ textDecoration: 'none' }}>
+        <Logo size="small" />
       </Link>
 
       <div className="navbar-links">

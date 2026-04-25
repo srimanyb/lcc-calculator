@@ -13,19 +13,33 @@ const connectDB = require("./config/db");
 
 const app = express();
 
-// ─── DB Wait Middleware ──────────────────────────────────────────────────────
-// Blocks requests if the DB is disconnected, but allows 'connecting' (readyState 2)
-// because Mongoose buffering handles it gracefully.
-app.use((req, res, next) => {
+// ─── DB Connection Middleware ────────────────────────────────────────────────
+// Ensures the database is connected or connecting before proceeding.
+app.use(async (req, res, next) => {
     const state = mongoose.connection.readyState;
     // 0: disconnected, 1: connected, 2: connecting, 3: disconnecting
-    if ([0, 3].includes(state) && !req.path.startsWith('/api/health')) {
-        console.warn(`[DB Middleware] Blocked ${req.method} ${req.path} - State: ${state}`);
-        return res.status(503).json({ 
-            message: `Database is currently unavailable (Status: ${state}). Please refresh in a few seconds...` 
+    
+    // Skip for health checks
+    if (req.path.startsWith('/api/health')) return next();
+
+    try {
+        if (state === 0) {
+            console.log(`[DB Middleware] State 0 (Disconnected). Attempting connection for ${req.path}...`);
+            await connectDB();
+        } else if (state === 3) {
+            console.warn(`[DB Middleware] State 3 (Disconnecting). Blocking request.`);
+            return res.status(503).json({ message: "Database is disconnecting. Please try again." });
+        }
+        // State 1 (Connected) and 2 (Connecting) are allowed.
+        // Mongoose buffers operations if state is 2, so it's safe to proceed.
+        next();
+    } catch (err) {
+        console.error(`[DB Middleware] Connection Error:`, err.message);
+        res.status(503).json({ 
+            message: "Database connection failed. Please check your configuration and try again.",
+            error: process.env.NODE_ENV === 'development' ? err.message : undefined
         });
     }
-    next();
 });
 
 // ─── Middleware ──────────────────────────────────────────────────────────────

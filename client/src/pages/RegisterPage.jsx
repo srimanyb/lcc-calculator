@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import Logo from '../components/Logo';
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -33,10 +34,9 @@ export default function RegisterPage() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <div className="auth-logo">
-          <span className="auth-logo-icon">🍽️</span>
-          <div className="auth-title">Create account</div>
-          <div className="auth-sub">Start building your recipe library</div>
+        <div className="auth-logo" style={{ marginBottom: '2.5rem' }}>
+          <Logo />
+          <div className="auth-sub" style={{ marginTop: '1rem' }}>Start building your recipe library</div>
         </div>
 
         <form onSubmit={submit}>

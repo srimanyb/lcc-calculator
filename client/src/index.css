@@ -313,6 +313,18 @@ input, textarea, select {
   border-color: rgba(212, 175, 55, 0.5); /* Gold focus */
   outline: none;
 }
+select.form-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23a8b8b0'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.2rem;
+  padding-right: 2.5rem;
+}
+select.form-input option {
+  background-color: #0d1410;
+  color: var(--text-primary);
+}
 .input-icon {
   position: absolute;
   left: 1rem;

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import Logo from '../components/Logo';
 
 export default function LoginPage() {
   const { login, user } = useAuth();
@@ -39,28 +40,7 @@ export default function LoginPage() {
   return (
     <div className="auth-page">
       <div className="auth-logo" style={{ marginBottom: '2rem' }}>
-        {/* Replacing missing image with exact CSS replica of the logo */}
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '8px' }}>
-          <span style={{ 
-            fontFamily: "'Brush Script MT', 'Lucida Handwriting', cursive", 
-            color: '#1f7a5c', /* Emerald Green */
-            fontSize: '2.8rem', 
-            fontWeight: '500',
-            letterSpacing: '1px'
-          }}>
-            Laxmi Chandra
-          </span>
-          <span style={{ 
-            fontFamily: "'Inter', sans-serif", 
-            color: '#ffffff', 
-            fontSize: '1rem', 
-            fontWeight: '400',
-            letterSpacing: '4px',
-            textTransform: 'uppercase'
-          }}>
-            Caterers<sup style={{ fontSize: '0.6rem', marginLeft: '2px' }}>®</sup>
-          </span>
-        </div>
+        <Logo />
       </div>
 
       <div className="auth-card">

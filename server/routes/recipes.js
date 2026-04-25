@@ -88,8 +88,7 @@ router.get('/:id', auth, async (req, res) => {
 });
 
 // POST /api/recipes
-router.post('/', [
-    auth,
+router.post('/', auth, adminOnly, [
     body('name').trim().notEmpty().withMessage('Recipe name is required').isLength({ max: 120 }),
     body('baseServing').isInt({ min: 1 }).withMessage('Base serving must be a positive integer'),
     body('ingredients').isArray({ min: 1 }).withMessage('At least one ingredient is required'),
@@ -97,9 +96,6 @@ router.post('/', [
     body('ingredients.*.qty').isFloat({ min: 0 }).withMessage('Ingredient quantity must be a positive number'),
     body('ingredients.*.unit').trim().notEmpty().withMessage('Ingredient unit required'),
 ], async (req, res) => {
-    if (req.user.role !== 'admin') {
-        return res.status(403).json({ message: 'Only admins can create recipes.' });
-    }
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -127,17 +123,12 @@ router.post('/', [
 });
 
 // PUT /api/recipes/:id
-router.put('/:id', [
-    auth,
+router.put('/:id', auth, adminOnly, [
     body('name').optional().trim().notEmpty().isLength({ max: 120 }),
     body('baseServing').optional().isInt({ min: 1 }),
     body('ingredients').optional().isArray({ min: 1 }),
 ], async (req, res) => {
     try {
-        if (req.user.role !== 'admin') {
-            return res.status(403).json({ message: 'Only admins can edit recipes.' });
-        }
-
         const recipe = await Recipe.findById(req.params.id);
         if (!recipe) return res.status(404).json({ message: 'Recipe not found.' });
 
@@ -155,12 +146,8 @@ router.put('/:id', [
 });
 
 // DELETE /api/recipes/:id
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', auth, adminOnly, async (req, res) => {
     try {
-        if (req.user.role !== 'admin') {
-            return res.status(403).json({ message: 'Only admins can delete recipes.' });
-        }
-
         const recipe = await Recipe.findById(req.params.id);
         if (!recipe) return res.status(404).json({ message: 'Recipe not found.' });
 

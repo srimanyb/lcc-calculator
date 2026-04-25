@@ -6,7 +6,8 @@ const AnalyticsEvent = require('../models/AnalyticsEvent');
 const auth = require('../middleware/auth');
 const adminOnly = require('../middleware/adminOnly');
 
-// All routes require admin access
+// All routes require authentication AND admin access
+router.use(auth);
 router.use(adminOnly);
 
 // GET /api/admin/users
