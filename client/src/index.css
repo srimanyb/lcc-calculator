@@ -1,6 +1,6 @@
 /* ── Design Tokens ──────────────────────────────────────────────────────────── */
 :root {
-  --bg-base:       #0d1410; /* Very dark green almost black */
+  --bg-base:       #000000; /* Pure black */
   --bg-card:       rgba(15, 47, 35, 0.4); /* Glassmorphism dark green */
   --bg-glass:      rgba(15, 47, 35, 0.6);
   --bg-hover:      rgba(31, 122, 92, 0.15);
@@ -70,7 +70,7 @@ input, textarea, select {
   justify-content: space-between;
   padding: 0 2rem;
   height: 64px;
-  background: rgba(13, 15, 20, 0.85);
+  background: #000000;
   backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border);
 }
