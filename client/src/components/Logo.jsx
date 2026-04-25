@@ -13,7 +13,7 @@ export default function Logo({ size = 'large', light = true }) {
     }}>
       <span style={{ 
         fontFamily: "'Brush Script MT', 'Lucida Handwriting', cursive", 
-        color: '#1f7a5c', /* Emerald Green */
+        color: '#00ff00', /* Vibrant Green to match screenshot */
         fontSize: isLarge ? '2.8rem' : '1.8rem', 
         fontWeight: '500',
         letterSpacing: '1px'
