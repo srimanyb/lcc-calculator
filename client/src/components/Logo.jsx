@@ -29,7 +29,7 @@ export default function Logo({ size = 'large', light = true, type = 'text' }) {
     }}>
       <span style={{ 
         fontFamily: "'Brush Script MT', 'Lucida Handwriting', cursive", 
-        color: '#00ff00', /* Vibrant Green */
+        color: '#1E6F3D', /* Official Laxmi Chandra Green */
         fontSize: isLarge ? '2.8rem' : '1.8rem', 
         fontWeight: '500',
         letterSpacing: '1px'
