@@ -41,6 +41,20 @@ body {
   color: var(--text-primary);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  background-image: url('/bg.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88); /* Deep black overlay for clarity */
+  z-index: -1;
+  pointer-events: none;
 }
 a { color: inherit; text-decoration: none; }
 button { cursor: pointer; font-family: inherit; border: none; }
@@ -358,19 +372,11 @@ select.form-input option {
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background-image: url('/bg.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
   position: relative;
   overflow-x: hidden;
 }
 .auth-page::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(10, 20, 15, 0.7); /* Dark green tint overlay */
-  pointer-events: none;
+  display: none;
 }
 .auth-logo {
   position: relative;
