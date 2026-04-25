@@ -19,7 +19,7 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <Link to="/" className="navbar-brand" style={{ textDecoration: 'none' }}>
-        <Logo size="small" />
+        <Logo size="small" type="image" />
       </Link>
 
       <div className="navbar-links">

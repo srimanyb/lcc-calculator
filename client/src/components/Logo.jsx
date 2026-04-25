@@ -1,8 +1,24 @@
 import React from 'react';
 
-export default function Logo({ size = 'large', light = true }) {
+export default function Logo({ size = 'large', light = true, type = 'text' }) {
   const isLarge = size === 'large';
   
+  if (type === 'image') {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', userSelect: 'none' }}>
+        <img 
+          src="/logo-bg.png" 
+          alt="Laxmi Chandra Caterers" 
+          style={{ 
+            height: isLarge ? '80px' : '45px',
+            width: 'auto',
+            objectFit: 'contain'
+          }} 
+        />
+      </div>
+    );
+  }
+
   return (
     <div style={{ 
       display: 'flex', 
@@ -13,7 +29,7 @@ export default function Logo({ size = 'large', light = true }) {
     }}>
       <span style={{ 
         fontFamily: "'Brush Script MT', 'Lucida Handwriting', cursive", 
-        color: '#00ff00', /* Vibrant Green to match screenshot */
+        color: '#00ff00', /* Vibrant Green */
         fontSize: isLarge ? '2.8rem' : '1.8rem', 
         fontWeight: '500',
         letterSpacing: '1px'
