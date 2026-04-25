@@ -253,25 +253,6 @@ input, textarea, select {
   z-index: 1;
 }
 
-.page::before {
-  content: '';
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 60vw;
-  height: 60vh;
-  max-width: 800px;
-  max-height: 800px;
-  background-image: url('/logo-bg.png');
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
-  opacity: 0.08; /* Very subtle watermark */
-  z-index: -1;
-  pointer-events: none;
-}
-
 .page-header {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;
