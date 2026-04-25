@@ -51,6 +51,7 @@ app.use(cors({
 app.use(express.json({ limit: '1mb' }));
 
 // ─── DB Connection Middleware ────────────────────────────────────────────────
+let adminChecked = false;
 app.use(async (req, res, next) => {
     if (req.path.startsWith('/api/health')) return next();
 
@@ -64,8 +65,14 @@ app.use(async (req, res, next) => {
         if (mongoose.connection.readyState === 0) {
             console.log(`[DB] Connecting for ${req.path}...`);
             await connectDB();
-            await seedAdmin();
         }
+
+        // Always ensure admin exists at least once per server lifecycle
+        if (!adminChecked && mongoose.connection.readyState === 1) {
+            await seedAdmin();
+            adminChecked = true;
+        }
+
         next();
     } catch (err) {
         console.error(`[DB Error]:`, err.message);
