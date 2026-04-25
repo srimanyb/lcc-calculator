@@ -19,7 +19,8 @@ async function request(path, options = {}) {
   try { data = await res.json(); } catch { data = {}; }
 
   if (!res.ok) {
-    const msg = data?.message || data?.errors?.[0]?.msg || `HTTP ${res.status}`;
+    let msg = data?.message || data?.errors?.[0]?.msg || `HTTP ${res.status}`;
+    if (data?.tip) msg += `\nTip: ${data.tip}`;
     throw new Error(msg);
   }
 
