@@ -20,7 +20,7 @@ export default function Logo({ size = 'large', light = true, type = 'text' }) {
   }
 
   return (
-    <div style={{ 
+    <div className="logo-container" style={{ 
       display: 'flex', 
       alignItems: 'baseline', 
       justifyContent: 'center', 
