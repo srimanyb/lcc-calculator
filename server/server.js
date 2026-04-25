@@ -23,6 +23,14 @@ app.use(async (req, res, next) => {
     if (req.path.startsWith('/api/health')) return next();
 
     try {
+        if (!process.env.MONGO_URI && !req.path.startsWith('/api/health')) {
+            console.error('[DB Middleware] CRITICAL: MONGO_URI is not defined in environment variables.');
+            return res.status(500).json({ 
+                message: "Server configuration error: Database URI is missing.",
+                tip: "If this is Vercel, add MONGO_URI to your Project Settings -> Environment Variables."
+            });
+        }
+
         if (state === 0) {
             console.log(`[DB Middleware] State 0 (Disconnected). Attempting connection for ${req.path}...`);
             await connectDB();
@@ -76,7 +84,18 @@ app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/events', require('./routes/events'));
 
-app.get('/api/health', (req, res) => res.json({ status: 'ok', db: mongoose.connection.readyState }));
+app.get('/api/health', (req, res) => {
+    res.json({ 
+        status: 'ok', 
+        db: mongoose.connection.readyState,
+        env: {
+            node_env: process.env.NODE_ENV,
+            has_mongo_uri: !!process.env.MONGO_URI,
+            has_jwt_secret: !!process.env.JWT_SECRET,
+            is_vercel: !!process.env.VERCEL
+        }
+    });
+});
 
 // ─── Serve Static Frontend ───────────────────────────────────────────────────
 const CLIENT_DIST = path.join(__dirname, '..', 'client', 'dist');
@@ -136,6 +155,9 @@ process.on('uncaughtException', (err) => {
     setTimeout(() => process.exit(1), 1000);
 });
 
-startServer();
+// ─── Start ────────────────────────────────────────────────────────────────────
+if (require.main === module) {
+    startServer();
+}
 
 module.exports = app;
