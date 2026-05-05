@@ -36,7 +36,7 @@ MENU:
 ${event.recipes.map(r => `- ${r.name} (${r.targetServings} servings)`).join('\n')}
 
 SHOPPING LIST:
-${event.ingredients.map(i => `- ${i.name}: ${i.qty} ${i.unit}`).join('\n')}
+${event.ingredients.map(i => `- ${i.name}: ${Math.round(i.qty)} ${i.unit}`).join('\n')}
     `.trim();
 
     if (navigator.share) {
@@ -79,7 +79,7 @@ ${event.ingredients.map(i => `- ${i.name}: ${i.qty} ${i.unit}`).join('\n')}
     const nextY = doc.lastAutoTable.finalY + 15;
     doc.text('Combined Shopping List', 14, nextY);
     
-    const ingredientRows = event.ingredients.map(i => [i.name, i.qty, i.unit]);
+    const ingredientRows = event.ingredients.map(i => [i.name, Math.round(i.qty), i.unit]);
     doc.autoTable({
       startY: nextY + 5,
       head: [['Ingredient', 'Quantity', 'Unit']],
@@ -199,7 +199,7 @@ ${event.ingredients.map(i => `- ${i.name}: ${i.qty} ${i.unit}`).join('\n')}
                         {selectedEvent.ingredients.map((ing, i) => (
                           <tr key={i}>
                             <td>{ing.name}</td>
-                            <td style={{ textAlign: 'right', fontWeight: 600 }}>{ing.qty}</td>
+                            <td style={{ textAlign: 'right', fontWeight: 600 }}>{Math.round(ing.qty)}</td>
                             <td style={{ color: 'var(--text-muted)' }}>{ing.unit}</td>
                           </tr>
                         ))}

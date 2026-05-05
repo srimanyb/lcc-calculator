@@ -45,7 +45,7 @@ export default function CalculatorPage() {
         }
       });
     });
-    return Object.values(map).map(i => ({ ...i, qty: parseFloat(i.qty.toFixed(2)) }));
+    return Object.values(map).map(i => ({ ...i, qty: Math.round(i.qty) }));
   };
 
   const aggregated = aggregateIngredients();
