@@ -36,4 +36,5 @@ const recipeSchema = new mongoose.Schema({
 // Full-text search index
 recipeSchema.index({ name: 'text', tags: 'text', 'ingredients.name': 'text' });
 
-module.exports = mongoose.model('Recipe', recipeSchema);
+// Check if model already exists to prevent OverwriteModelError in Vercel
+module.exports = mongoose.models.Recipe || mongoose.model('Recipe', recipeSchema);

@@ -27,4 +27,4 @@ const analyticsEventSchema = new mongoose.Schema({
     },
 });
 
-module.exports = mongoose.model('AnalyticsEvent', analyticsEventSchema);
+module.exports = mongoose.models.AnalyticsEvent || mongoose.model('AnalyticsEvent', analyticsEventSchema);

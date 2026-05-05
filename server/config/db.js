@@ -1,20 +1,20 @@
 const mongoose = require("mongoose");
 
-// Cache the connection promise to prevent multiple simultaneous connection attempts
-let cachedPromise = null;
+// Cache the connection globally to prevent multiple connections in Vercel serverless functions
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
 
 const connectDB = async () => {
   // 1. If already connected, return
-  if (mongoose.connection.readyState === 1) {
-    return mongoose.connection;
+  if (cached.conn) {
+    return cached.conn;
   }
 
-  // 2. If a connection is already in progress, wait for it
-  if (cachedPromise) {
-    return cachedPromise;
-  }
-
-  try {
+  // 2. If a connection is not in progress, start one
+  if (!cached.promise) {
     const uri = process.env.MONGO_URI || "mongodb+srv://sriman:Sriman%4010@cluster0.vs6trum.mongodb.net/menumaster?retryWrites=true&w=majority";
     
     if (!uri) {
@@ -28,18 +28,20 @@ const connectDB = async () => {
 
     console.log(`📡 Connecting to MongoDB...`);
     
-    cachedPromise = mongoose.connect(uri, {
+    cached.promise = mongoose.connect(uri, {
       serverSelectionTimeoutMS: 5000,
-      bufferCommands: true,
+      bufferCommands: false, // Critical for Vercel to fail fast instead of hanging
+    }).then((mongoose) => {
+      console.log(`✅ MongoDB Connected: ${mongoose.connection.host}`);
+      return mongoose.connection;
     });
+  }
 
-    const conn = await cachedPromise;
-
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
-    
-    return conn;
+  try {
+    cached.conn = await cached.promise;
+    return cached.conn;
   } catch (error) {
-    cachedPromise = null; // Clear on error to allow retry
+    cached.promise = null; // Clear on error to allow retry
     console.error("❌ MongoDB connection error:", error.message);
     if (!process.env.VERCEL) process.exit(1);
     throw error;
