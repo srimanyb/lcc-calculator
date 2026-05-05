@@ -12,17 +12,20 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const seedAdmin = async () => {
     try {
         const adminEmail = 'admin@lcc.com';
-        // Always ensure we have a fresh, correctly hashed admin during this phase
-        await User.deleteOne({ email: adminEmail });
         
-        console.log('🌱 Seeding fresh admin account...');
-        await User.create({
-            name: 'LCC Admin',
-            email: adminEmail,
-            passwordHash: 'admin123', // The model hook will hash this ONCE
-            role: 'admin'
-        });
-        console.log('✅ Admin seeded successfully.');
+        // Check if admin already exists
+        const existingAdmin = await User.findOne({ email: adminEmail });
+        
+        if (!existingAdmin) {
+            console.log('🌱 Seeding fresh admin account...');
+            await User.create({
+                name: 'LCC Admin',
+                email: adminEmail,
+                passwordHash: 'admin123', // The model hook will hash this ONCE
+                role: 'admin'
+            });
+            console.log('✅ Admin seeded successfully.');
+        }
     } catch (err) {
         console.error('❌ Seeding failed:', err.message);
     }
