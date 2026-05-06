@@ -48,4 +48,16 @@ router.post('/', auth, async (req, res) => {
     }
 });
 
+// DELETE /api/events/:id
+router.delete('/:id', auth, async (req, res) => {
+    try {
+        const event = await Event.findOneAndDelete({ _id: req.params.id, owner: req.user._id });
+        if (!event) return res.status(404).json({ message: 'Event not found.' });
+        res.json({ message: 'Event deleted successfully.' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Failed to delete event.' });
+    }
+});
+
 module.exports = router;

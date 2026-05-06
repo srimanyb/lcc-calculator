@@ -26,6 +26,20 @@ export default function SavedEventsPage() {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this event? This action cannot be undone.')) return;
+    try {
+      await api.deleteEvent(id);
+      addToast('Event deleted successfully.', 'success');
+      setEvents(prev => prev.filter(e => e._id !== id));
+      if (selectedEvent?._id === id) {
+        setSelectedEvent(null);
+      }
+    } catch (err) {
+      addToast(err.message || 'Failed to delete event', 'error');
+    }
+  };
+
   const shareText = (event) => {
     const text = `
 Event: ${event.eventName}
@@ -161,7 +175,8 @@ ${event.ingredients.map(i => `- ${i.name}: ${Math.round(i.qty)} ${i.unit}`).join
                     Planned for {new Date(selectedEvent.date).toLocaleDateString()} · {selectedEvent.numberOfPeople} guests · {selectedEvent.timeType}
                   </p>
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <button className="btn btn-ghost" onClick={() => handleDelete(selectedEvent._id)} style={{ color: 'var(--accent-danger)' }}>🗑 Delete</button>
                   <button className="btn btn-ghost" onClick={() => shareText(selectedEvent)}>📱 Share Text</button>
                   <button className="btn btn-primary" onClick={() => sharePDF(selectedEvent)}>📄 Export PDF</button>
                 </div>
