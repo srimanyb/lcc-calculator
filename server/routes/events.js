@@ -29,13 +29,14 @@ router.get('/:id', auth, async (req, res) => {
 // POST /api/events
 router.post('/', auth, async (req, res) => {
     try {
-        const { eventName, numberOfPeople, date, timeType, recipes, ingredients } = req.body;
+        const { eventName, numberOfPeople, date, timeType, venue, recipes, ingredients } = req.body;
         
         const event = await Event.create({
             eventName,
             numberOfPeople,
             date,
             timeType,
+            venue,
             recipes,
             ingredients,
             owner: req.user._id,

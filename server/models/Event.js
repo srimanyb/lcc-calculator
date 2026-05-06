@@ -20,6 +20,11 @@ const eventSchema = new mongoose.Schema({
         enum: ['Lunch', 'Dinner'],
         required: [true, 'Time type is required'],
     },
+    venue: {
+        type: String,
+        trim: true,
+        default: '',
+    },
     recipes: [{
         recipeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Recipe' },
         name: String,

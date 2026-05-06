@@ -9,6 +9,7 @@ export default function EventFormModal({ menuItems, aggregatedList, onSaved, onC
     numberOfPeople: '',
     date: new Date().toISOString().split('T')[0],
     timeType: 'Lunch',
+    venue: '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -58,6 +59,16 @@ export default function EventFormModal({ menuItems, aggregatedList, onSaved, onC
               onChange={e => setField('eventName', e.target.value)}
               required
               autoFocus
+            />
+          </div>
+          
+          <div className="form-group">
+            <label className="form-label">Event Venue / Place</label>
+            <input
+              className="form-input"
+              placeholder="e.g. Grand Palace Hall"
+              value={form.venue}
+              onChange={e => setField('venue', e.target.value)}
             />
           </div>
 

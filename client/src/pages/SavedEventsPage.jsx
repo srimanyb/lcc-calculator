@@ -44,6 +44,7 @@ export default function SavedEventsPage() {
     const text = `
 Event: ${event.eventName}
 People: ${event.numberOfPeople}
+Venue: ${event.venue || 'TBD'}
 Date: ${new Date(event.date).toLocaleDateString()} (${event.timeType})
 
 MENU:
@@ -74,7 +75,7 @@ ${event.ingredients.map(i => `- ${i.name}: ${Math.round(i.qty)} ${i.unit}`).join
     doc.setFontSize(12);
     doc.setTextColor(100);
     doc.text(`Date: ${new Date(event.date).toLocaleDateString()} | ${event.timeType}`, 14, 30);
-    doc.text(`Guests: ${event.numberOfPeople}`, 14, 37);
+    doc.text(`Guests: ${event.numberOfPeople} | Venue: ${event.venue || 'TBD'}`, 14, 37);
 
     // Recipes Section
     doc.setFontSize(16);
@@ -154,7 +155,7 @@ ${event.ingredients.map(i => `- ${i.name}: ${Math.round(i.qty)} ${i.unit}`).join
                 >
                   <div style={{ fontWeight: 600, fontSize: '1.1rem' }}>{event.eventName}</div>
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                    {new Date(event.date).toLocaleDateString()} · {event.numberOfPeople} people
+                    {new Date(event.date).toLocaleDateString()} · {event.numberOfPeople} people {event.venue && `· ${event.venue}`}
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
                      <span className="tag">{event.timeType}</span>
@@ -172,7 +173,7 @@ ${event.ingredients.map(i => `- ${i.name}: ${Math.round(i.qty)} ${i.unit}`).join
                 <div>
                   <h2 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>{selectedEvent.eventName}</h2>
                   <p style={{ color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                    Planned for {new Date(selectedEvent.date).toLocaleDateString()} · {selectedEvent.numberOfPeople} guests · {selectedEvent.timeType}
+                    Planned for {new Date(selectedEvent.date).toLocaleDateString()} · {selectedEvent.numberOfPeople} guests · {selectedEvent.timeType} {selectedEvent.venue && `· Venue: ${selectedEvent.venue}`}
                   </p>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
