@@ -9,6 +9,17 @@ export default function CalculatorPage() {
 
   const [items, setItems] = useState([]);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [listFilter, setListFilter] = useState('All');
+
+  const categorizeIngredient = (name) => {
+    const n = name.toLowerCase();
+    const meat = ['mutton', 'chicken', 'fish', 'egg', 'prawn', 'meat', 'beef', 'pork'];
+    const veg = ['onion', 'tomato', 'potato', 'chilli', 'ginger', 'garlic', 'coriander', 'mint', 'carrot', 'beans', 'cabbage', 'capsicum', 'cauliflower', 'spinach', 'lemon', 'mirchi', 'kothmir', 'pudina', 'alu', 'peas', 'brinjal', 'gourd', 'veg'];
+    
+    if (meat.some(m => n.includes(m))) return 'Meat';
+    if (veg.some(v => n.includes(v))) return 'Vegetables';
+    return 'Kirana';
+  };
 
   useEffect(() => {
     const saved = JSON.parse(sessionStorage.getItem('mm_calc') || '[]');
@@ -51,13 +62,14 @@ export default function CalculatorPage() {
   const aggregated = aggregateIngredients();
 
   const exportCSV = () => {
+    const listToExport = aggregated.filter(ing => listFilter === 'All' || categorizeIngredient(ing.name) === listFilter);
     const rows = [['Ingredient', 'Quantity', 'Unit']];
-    aggregated.forEach(i => rows.push([i.name, i.qty, i.unit]));
+    listToExport.forEach(i => rows.push([i.name, i.qty, i.unit]));
     const csv = rows.map(r => r.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'shopping-list.csv'; a.click();
-    addToast('Shopping list exported ✓', 'success');
+    const a = document.createElement('a'); a.href = url; a.download = `shopping-list-${listFilter.toLowerCase()}.csv`; a.click();
+    addToast(`${listFilter} shopping list exported ✓`, 'success');
   };
 
   return (
@@ -147,9 +159,31 @@ export default function CalculatorPage() {
 
           {/* Right: aggregated shopping list */}
           <div>
-            <h2 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-              COMBINED SHOPPING LIST
-            </h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <h2 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-secondary)', margin: 0 }}>
+                COMBINED SHOPPING LIST
+              </h2>
+              <div style={{ display: 'flex', gap: '0.25rem', background: 'var(--bg-hover)', padding: '0.25rem', borderRadius: '8px' }}>
+                {['All', 'Vegetables', 'Meat', 'Kirana'].map(f => (
+                  <button
+                    key={f}
+                    onClick={() => setListFilter(f)}
+                    style={{
+                      border: 'none',
+                      background: listFilter === f ? 'var(--accent-1)' : 'transparent',
+                      color: listFilter === f ? 'var(--bg-card)' : 'var(--text-secondary)',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '4px',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
               <table className="ingredients-table">
                 <thead>
@@ -162,7 +196,9 @@ export default function CalculatorPage() {
                 <tbody>
                   {aggregated.length === 0 ? (
                     <tr><td colSpan="3" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Adjust servings to see totals</td></tr>
-                  ) : aggregated.map((ing, i) => (
+                  ) : aggregated
+                      .filter(ing => listFilter === 'All' || categorizeIngredient(ing.name) === listFilter)
+                      .map((ing, i) => (
                     <tr key={i}>
                       <td>{ing.name}</td>
                       <td style={{ textAlign: 'right' }}>
