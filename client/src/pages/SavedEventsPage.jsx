@@ -259,7 +259,7 @@ ${listToExport.map(i => `- ${i.name}: ${Math.round(i.qty)} ${i.unit}`).join('\n'
                           style={{
                             border: 'none',
                             background: listFilter === f ? 'var(--accent-1)' : 'transparent',
-                            color: listFilter === f ? 'var(--bg-card)' : 'var(--text-secondary)',
+                            color: listFilter === f ? '#000000' : 'var(--text-secondary)',
                             padding: '0.35rem 0.6rem',
                             borderRadius: '6px',
                             fontSize: '0.85rem',
