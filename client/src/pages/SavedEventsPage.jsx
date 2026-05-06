@@ -10,6 +10,17 @@ export default function SavedEventsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [listFilter, setListFilter] = useState('All');
+
+  const categorizeIngredient = (name) => {
+    const n = name.toLowerCase();
+    const meat = ['mutton', 'chicken', 'fish', 'egg', 'prawn', 'meat', 'beef', 'pork'];
+    const veg = ['onion', 'tomato', 'potato', 'chilli', 'ginger', 'garlic', 'coriander', 'mint', 'carrot', 'beans', 'cabbage', 'capsicum', 'cauliflower', 'spinach', 'lemon', 'mirchi', 'kothmir', 'pudina', 'alu', 'peas', 'brinjal', 'gourd', 'veg'];
+    
+    if (meat.some(m => n.includes(m))) return 'Meat';
+    if (veg.some(v => n.includes(v))) return 'Vegetables';
+    return 'Kirana';
+  };
 
   useEffect(() => {
     fetchEvents();
@@ -41,6 +52,8 @@ export default function SavedEventsPage() {
   };
 
   const shareText = (event) => {
+    const listToExport = event.ingredients.filter(ing => listFilter === 'All' || categorizeIngredient(ing.name) === listFilter);
+    
     const text = `
 Event: ${event.eventName}
 People: ${event.numberOfPeople}
@@ -50,13 +63,13 @@ Date: ${new Date(event.date).toLocaleDateString('en-GB')} (${event.timeType})
 MENU:
 ${event.recipes.map(r => `- ${r.name} (${r.targetServings} servings)`).join('\n')}
 
-SHOPPING LIST:
-${event.ingredients.map(i => `- ${i.name}: ${Math.round(i.qty)} ${i.unit}`).join('\n')}
+SHOPPING LIST (${listFilter.toUpperCase()}):
+${listToExport.map(i => `- ${i.name}: ${Math.round(i.qty)} ${i.unit}`).join('\n')}
     `.trim();
 
     if (navigator.share) {
       navigator.share({
-        title: `Event: ${event.eventName}`,
+        title: `Event: ${event.eventName} - ${listFilter} List`,
         text: text,
       }).catch(() => {});
     } else {
@@ -92,9 +105,10 @@ ${event.ingredients.map(i => `- ${i.name}: ${Math.round(i.qty)} ${i.unit}`).join
 
     // Shopping List Section
     const nextY = doc.lastAutoTable.finalY + 15;
-    doc.text('Combined Shopping List', 14, nextY);
+    doc.text(`Shopping List (${listFilter})`, 14, nextY);
     
-    const ingredientRows = event.ingredients.map(i => [i.name, Math.round(i.qty), i.unit]);
+    const listToExport = event.ingredients.filter(ing => listFilter === 'All' || categorizeIngredient(ing.name) === listFilter);
+    const ingredientRows = listToExport.map(i => [i.name, Math.round(i.qty), i.unit]);
     doc.autoTable({
       startY: nextY + 5,
       head: [['Ingredient', 'Quantity', 'Unit']],
@@ -102,7 +116,7 @@ ${event.ingredients.map(i => `- ${i.name}: ${Math.round(i.qty)} ${i.unit}`).join
       theme: 'striped',
     });
 
-    doc.save(`${event.eventName.replace(/\s+/g, '_')}_details.pdf`);
+    doc.save(`${event.eventName.replace(/\s+/g, '_')}_${listFilter}_list.pdf`);
     addToast('PDF downloaded ✓', 'success');
   };
 
@@ -201,7 +215,29 @@ ${event.ingredients.map(i => `- ${i.name}: ${Math.round(i.qty)} ${i.unit}`).join
                 </div>
 
                 <div>
-                  <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>Shopping List</h3>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>Shopping List</h3>
+                    <div style={{ display: 'flex', gap: '0.25rem', background: 'var(--bg-hover)', padding: '0.25rem', borderRadius: '8px' }}>
+                      {['All', 'Vegetables', 'Meat', 'Kirana'].map(f => (
+                        <button
+                          key={f}
+                          onClick={() => setListFilter(f)}
+                          style={{
+                            border: 'none',
+                            background: listFilter === f ? 'var(--accent-1)' : 'transparent',
+                            color: listFilter === f ? 'var(--bg-card)' : 'var(--text-secondary)',
+                            padding: '0.25rem 0.5rem',
+                            borderRadius: '4px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {f}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
                     <table className="ingredients-table" style={{ fontSize: '0.9rem' }}>
                       <thead>
@@ -212,7 +248,9 @@ ${event.ingredients.map(i => `- ${i.name}: ${Math.round(i.qty)} ${i.unit}`).join
                         </tr>
                       </thead>
                       <tbody>
-                        {selectedEvent.ingredients.map((ing, i) => (
+                        {selectedEvent.ingredients
+                          .filter(ing => listFilter === 'All' || categorizeIngredient(ing.name) === listFilter)
+                          .map((ing, i) => (
                           <tr key={i}>
                             <td>{ing.name}</td>
                             <td style={{ textAlign: 'right', fontWeight: 600 }}>{Math.round(ing.qty)}</td>
