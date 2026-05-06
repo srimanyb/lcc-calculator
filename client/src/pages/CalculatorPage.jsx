@@ -172,10 +172,10 @@ export default function CalculatorPage() {
                       border: 'none',
                       background: listFilter === f ? 'var(--accent-1)' : 'transparent',
                       color: listFilter === f ? 'var(--bg-card)' : 'var(--text-secondary)',
-                      padding: '0.25rem 0.5rem',
-                      borderRadius: '4px',
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
+                      padding: '0.35rem 0.6rem',
+                      borderRadius: '6px',
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
                       cursor: 'pointer'
                     }}
                   >
