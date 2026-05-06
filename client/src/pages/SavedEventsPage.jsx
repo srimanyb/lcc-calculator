@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useToast } from '../context/ToastContext';
 import { jsPDF } from 'jspdf';
@@ -37,6 +38,8 @@ export default function SavedEventsPage() {
     }
   };
 
+  const navigate = useNavigate();
+
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this event? This action cannot be undone.')) return;
     try {
@@ -48,6 +51,36 @@ export default function SavedEventsPage() {
       }
     } catch (err) {
       addToast(err.message || 'Failed to delete event', 'error');
+    }
+  };
+
+  const handleEdit = async (event) => {
+    try {
+      setLoading(true);
+      const fullRecipes = await Promise.all(
+        event.recipes.map(async (r) => {
+          const data = await api.getRecipe(r.recipeId);
+          return {
+            ...data.recipe,
+            targetServings: r.targetServings
+          };
+        })
+      );
+      
+      sessionStorage.setItem('mm_calc', JSON.stringify(fullRecipes));
+      sessionStorage.setItem('mm_calc_edit_id', event._id);
+      sessionStorage.setItem('mm_calc_edit_meta', JSON.stringify({
+        eventName: event.eventName,
+        numberOfPeople: event.numberOfPeople,
+        date: new Date(event.date).toISOString().split('T')[0],
+        timeType: event.timeType,
+        venue: event.venue
+      }));
+      
+      navigate('/calculator');
+    } catch (err) {
+      addToast('Failed to load event for editing', 'error');
+      setLoading(false);
     }
   };
 
@@ -191,6 +224,7 @@ ${listToExport.map(i => `- ${i.name}: ${Math.round(i.qty)} ${i.unit}`).join('\n'
                   </p>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <button className="btn btn-ghost" onClick={() => handleEdit(selectedEvent)}>✏️ Edit Event</button>
                   <button className="btn btn-ghost" onClick={() => handleDelete(selectedEvent._id)} style={{ color: 'var(--accent-danger)' }}>🗑 Delete</button>
                   <button className="btn btn-ghost" onClick={() => shareText(selectedEvent)}>📱 Share Text</button>
                   <button className="btn btn-primary" onClick={() => sharePDF(selectedEvent)}>📄 Export PDF</button>

@@ -4,12 +4,21 @@ import { useToast } from '../context/ToastContext';
 
 export default function EventFormModal({ menuItems, aggregatedList, onSaved, onClose }) {
   const { addToast } = useToast();
-  const [form, setForm] = useState({
-    eventName: '',
-    numberOfPeople: '',
-    date: new Date().toISOString().split('T')[0],
-    timeType: 'Lunch',
-    venue: '',
+  const editId = sessionStorage.getItem('mm_calc_edit_id');
+  const [form, setForm] = useState(() => {
+    const metaStr = sessionStorage.getItem('mm_calc_edit_meta');
+    if (metaStr) {
+      try {
+        return JSON.parse(metaStr);
+      } catch (e) {}
+    }
+    return {
+      eventName: '',
+      numberOfPeople: '',
+      date: new Date().toISOString().split('T')[0],
+      timeType: 'Lunch',
+      venue: '',
+    };
   });
   const [saving, setSaving] = useState(false);
 
@@ -31,8 +40,15 @@ export default function EventFormModal({ menuItems, aggregatedList, onSaved, onC
         ingredients: aggregatedList,
       };
 
-      await api.createEvent(payload);
-      addToast('Event saved successfully ✓', 'success');
+      if (editId) {
+        await api.updateEvent(editId, payload);
+        addToast('Event updated successfully ✓', 'success');
+        sessionStorage.removeItem('mm_calc_edit_id');
+        sessionStorage.removeItem('mm_calc_edit_meta');
+      } else {
+        await api.createEvent(payload);
+        addToast('Event saved successfully ✓', 'success');
+      }
       onSaved();
     } catch (err) {
       addToast(err.message, 'error');
@@ -45,7 +61,7 @@ export default function EventFormModal({ menuItems, aggregatedList, onSaved, onC
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" style={{ maxWidth: '450px' }} onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h2 className="modal-title">Save as Event</h2>
+          <h2 className="modal-title">{editId ? 'Update Event' : 'Save as Event'}</h2>
           <button className="btn-icon" onClick={onClose}>✕</button>
         </div>
 
@@ -110,7 +126,7 @@ export default function EventFormModal({ menuItems, aggregatedList, onSaved, onC
           </div>
 
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-            Saving this will capture the current recipes and combined shopping list for future reference.
+            {editId ? 'Updating this will overwrite the existing recipes and shopping list.' : 'Saving this will capture the current recipes and combined shopping list for future reference.'}
           </p>
 
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
@@ -120,7 +136,7 @@ export default function EventFormModal({ menuItems, aggregatedList, onSaved, onC
               className="btn btn-primary"
               disabled={saving}
             >
-              {saving ? 'Saving...' : 'Save Event'}
+              {saving ? 'Saving...' : editId ? 'Update Event' : 'Save Event'}
             </button>
           </div>
         </form>

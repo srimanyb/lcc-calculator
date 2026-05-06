@@ -61,4 +61,23 @@ router.delete('/:id', auth, async (req, res) => {
     }
 });
 
+// PUT /api/events/:id
+router.put('/:id', auth, async (req, res) => {
+    try {
+        const { eventName, numberOfPeople, date, timeType, venue, recipes, ingredients } = req.body;
+        
+        const event = await Event.findOneAndUpdate(
+            { _id: req.params.id, owner: req.user._id },
+            { eventName, numberOfPeople, date, timeType, venue, recipes, ingredients },
+            { new: true, runValidators: true }
+        );
+
+        if (!event) return res.status(404).json({ message: 'Event not found.' });
+        res.json({ event });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Failed to update event.' });
+    }
+});
+
 module.exports = router;
